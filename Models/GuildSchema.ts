@@ -14,6 +14,7 @@ export default model<GuildDocument>("support-tags", new Schema(
                   TagResponse: {
                       TagEmbedTitle: MO(String, undefined, true),
                       TagEmbedDescription: MO(String, null, false),
+                      TagEmbedImageURL: MO(String, null, false),
                       TagEmbedFooter: MO(String, null, false)
                   }
               }

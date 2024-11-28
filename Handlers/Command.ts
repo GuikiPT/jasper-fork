@@ -9,7 +9,7 @@ import { Plugin } from "../Common/DefinePlugin";
 
 export default function (ctx: Context): void {
   let commands: string[] = []
-  process.platform == "linux" ? commands = glob.sync("./Plugins/**/*.js") : commands = glob.sync("./dist/Plugins/**/*.js");
+  process.platform == "linux" ? commands = glob.sync(__dirname + "/../Plugins/**/*.js") : commands = glob.sync("./dist/Plugins/**/*.js");
 
     for (let i = 0; i < commands.length; i++) {
         const filePath = path.resolve(commands[i]);

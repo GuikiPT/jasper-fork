@@ -12,6 +12,7 @@ export type Tag = {
     TagName: string;
     TagAuthor: Snowflake;
     TagResponse: {
+        TagEmbedImageURL: string;
         TagEmbedTitle: string;
         TagEmbedDescription: Nullable<string>;
         TagEmbedFooter: Nullable<string>;

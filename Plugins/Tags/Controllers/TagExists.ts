@@ -38,6 +38,7 @@ export async function TagExists(options: commonOptions): Promise<boolean> {
                 TagName: findTag.TagName,
                 TagEmbedTitle: findTag.TagResponse.TagEmbedTitle,
                 TagEmbedDescription: findTag.TagResponse.TagEmbedDescription,
+                TagEmbedImageURL: findTag.TagResponse.TagEmbedImageURL,
                 TagEmbedFooter: findTag.TagResponse.TagEmbedFooter,
             });
             ctx.store.setKey(key, ...tags);

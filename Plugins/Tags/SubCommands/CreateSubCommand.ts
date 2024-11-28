@@ -69,6 +69,20 @@ export async function RunCreateSubCommand(ctx: Context, interaction: ChatInputCo
               components: [
                 {
                   type: ComponentType.TextInput,
+                  customId: "tag_create_image_url",
+                  label: "Embed Image URL",
+                  placeholder: "https://imgur.com/Ztrbg8r",
+                  maxLength: 500,
+                  style: TextInputStyle.Short,
+                  required: false
+                }
+              ]
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.TextInput,
                   customId: "tag_create_embed_footer",
                   label: "Embed Footer",
                   placeholder: "Make sure to be patient!",

@@ -22,6 +22,7 @@ export async function TagsGet(
                 TagName: tag.TagName,
                 TagEmbedTitle: tag.TagResponse.TagEmbedTitle,
                 TagEmbedDescription: tag.TagResponse.TagEmbedDescription,
+                TagEmbedImageURL: tag.TagResponse.TagEmbedImageURL,
                 TagEmbedFooter: tag.TagResponse.TagEmbedFooter
               });
             }
