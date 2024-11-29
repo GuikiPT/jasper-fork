@@ -35,7 +35,7 @@ export = {
                     return interaction.reply({ content: `> The support tag \`${ tag.name }\` already exists!`, ephemeral: true });
                 } 
                 if (!/^https?:\/\/.*\.(jpg|jpeg|png|gif|webp)$/i.test(tag.image_url)) {
-                    return interaction.reply({ content: `> The provided image link is not a valid image URL!`, ephemeral: true });
+                    return interaction.reply({ content: `${ Emojis.CROSS_MARK } The provided image link is not a valid image URL!`, ephemeral: true });
                 }                                         
                 else {
                     await TagCreate({ guildId: interaction.guild.id, options: { author: tag.author, name: tag.name, title: tag.title, description: tag.description, image_url: tag.image_url, footer: tag.footer }, ctx: ctx });

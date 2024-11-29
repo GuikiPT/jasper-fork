@@ -32,7 +32,7 @@ export = {
                     footer: interaction.fields.getTextInputValue("tag_edit_embed_footer") ? interaction.fields.getTextInputValue("tag_edit_embed_footer") : null
                 };
                 if (!/^https?:\/\/.*\.(jpg|jpeg|png|gif|webp)$/i.test(tag.image_url)) {
-                    return interaction.reply({ content: `> The provided image link is not a valid image URL!`, ephemeral: true });
+                    return interaction.reply({ content: `${ Emojis.CROSS_MARK } The provided image link is not a valid image URL!`, ephemeral: true });
                 } 
                 if (await TagExists({ guildId: interaction.guild.id, name: tag.name, ctx: ctx })) {
                     await TagEdit({ guildId: interaction.guild.id, options: { name: tag.name, title: tag.title, description: tag.description, image_url: tag.image_url, footer: tag.footer }, ctx: ctx })
