@@ -183,6 +183,7 @@ class TagController extends Controller {
         if (!this.#checkConfig() && mod) {
             guildId = mod.guildId;
             name = mod.name;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             tag = mod.tag ?? { author: "", editedBy: null, name: "", title: "", description: null, image_url: null, footer: null };
         }
 

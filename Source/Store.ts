@@ -47,4 +47,26 @@ export class Store extends Redis {
     public guildExists(options: GuildSnowflake | UserSnowflake): Promise<number> {
         return this.exists(JSON.stringify(options));
     }
+
+    // WIP
+    public async setThreadTimestamp(threadId: string, userId: string, embedTimestamp: string): Promise<void> {
+        const key = `support:thread:${threadId}`;
+        const data = { lastMessage: Date.now(), userId, embedTimestamp };
+        await this.set(key, JSON.stringify(data));
+    }
+
+    public async getThreadTimestamp(threadId: string): Promise<{ lastMessage: number; userId: string, embedTimestamp: string } | null> {
+        const key = `support:thread:${threadId}`;
+        const data = await this.get(key);
+        return data ? JSON.parse(data) : null;
+    }
+
+    public async getAllThreads(): Promise<string[]> {
+        return this.keys("support:thread:*");
+    }
+
+    public async deleteThread(threadId: string): Promise<void> {
+        const key = `support:thread:${threadId}`;
+        await this.del(key);
+    }
 }
