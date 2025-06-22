@@ -1,7 +1,12 @@
 import {
     AttachmentBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ContainerBuilder,
+    MessageFlags,
     MessageReaction,
     PartialMessageReaction,
+    SeparatorSpacingSize,
     TextChannel,
 } from 'discord.js';
 
@@ -11,30 +16,6 @@ import { Options } from '../services/settingsService';
 
 import { Listener } from './listener';
 
-interface PlaywrightRenderRequest {
-    [key: string]: unknown;
-    attachments?: null | string[];
-    avatar: string;
-    channelId: string;
-    channelName: string;
-    content: string;
-    customData?: {
-        mentionedRoles: Record<string, string>;
-        mentionedUsers: Record<string, string>;
-    };
-    replyAvatar?: string;
-    replyContent?: string;
-    replyUsername?: string;
-    replyUsernameColor?: string;
-    roleIcon: string;
-    roleId: null | string;
-    roleName: string;
-    timestamp: string;
-    userId: string;
-    username: string;
-    usernameColor: string;
-}
-
 export default class MessageReactionAddListener extends Listener<'messageReactionAdd'> {
     constructor(ctx: Context) {
         super(ctx, 'messageReactionAdd');
@@ -42,174 +23,107 @@ export default class MessageReactionAddListener extends Listener<'messageReactio
 
     public async execute(reaction: MessageReaction | PartialMessageReaction): Promise<void> {
         try {
-            const guildId = reaction.message.guildId!;
-            await this.ctx.services.settings.configure<Options>({ guildId });
-            const { Skullboard } = this.ctx.services.settings.getSettings();
+            if (reaction.partial) {
+                try {
+                    await reaction.fetch();
+                } catch (error) {
+                    console.error('Failed to fetch the reaction:', error);
+                    return;
+                }
+            }
 
-            if (
-                reaction.emoji.name === Skullboard.SkullboardEmoji &&
-                reaction.count >= Skullboard.SkullboardReactionThreshold
-            ) {
-                const skullboardChannel = this.ctx.channels.resolve(
+            const guildId = await reaction.message.guildId;
+            await this.ctx.services.settings.configure<Options>({ guildId });
+
+            const { Skullboard } = this.ctx.services.settings.getSettings();
+            const isSkullboardEmoji = reaction.emoji.name === Skullboard.SkullboardEmoji;
+            const meetsReactionThreshold = reaction.count >= Skullboard.SkullboardReactionThreshold;
+
+            if (isSkullboardEmoji && meetsReactionThreshold) {
+                const skullboardChannel = (await this.ctx.channels.resolve(
                     Skullboard.SkullboardChannel,
-                ) as TextChannel;
+                )) as TextChannel;
+
                 const fetchedChannel = await this.ctx.channels.fetch(reaction.message.channel.id);
 
                 if (fetchedChannel?.isTextBased()) {
                     const message = await fetchedChannel.messages.fetch(reaction.message.id);
+
                     const member = message.guild.members.resolve(message.author.id);
                     if (!member) {
                         throw new Error('Could not resolve message author as guild member');
                     }
 
                     try {
-                        const timestamp = new Date(message.createdTimestamp).toLocaleTimeString(
-                            'en-US',
-                            { hour: 'numeric', hour12: true, minute: '2-digit' },
-                        );
+                        const { chromium } = require('playwright');
+                        const messageUrl = `http://localhost:3000/${message.guildId}/${message.channel.id}/${message.id}`;
 
-                        const repliedToMessage = message.reference
-                            ? await message.channel.messages.fetch(message.reference.messageId)
-                            : null;
+                        const browser = await chromium.launch({ headless: true });
+                        const page = await browser.newPage();
 
-                        const repliedToMember = repliedToMessage
-                            ? await message.guild.members
-                                  .fetch(repliedToMessage.author.id)
-                                  .catch(() => null)
-                            : null;
-
-                        const coloredRole =
-                            member?.roles?.cache
-                                ?.filter((role) => role.color !== 0)
-                                ?.sort((a, b) => b.position - a.position)
-                                ?.first() || '#FFFFFF';
-
-                        const repliedColorRole =
-                            repliedToMember?.roles?.cache
-                                ?.filter((role) => role.color !== 0)
-                                ?.sort((a, b) => b.position - a.position)
-                                ?.first() || '#FFFFFF';
-
-                        const avatarUrl = member.user.displayAvatarURL({
-                            forceStatic: true,
-                            size: 1024,
+                        await page.evaluate(() => {
+                            document.body.style.zoom = '2';
                         });
-                        const roleIconUrl =
-                            member?.roles?.highest?.iconURL() || message.guild.iconURL();
 
-                        if (
-                            !this.ctx.webserver.isValidUrl(avatarUrl) ||
-                            (roleIconUrl && !this.ctx.webserver.isValidUrl(roleIconUrl))
-                        ) {
-                            throw new Error('Invalid avatar or role icon URL');
+                        await page.goto(messageUrl, { waitUntil: 'networkidle' });
+
+                        const element = await page.locator('div#discord-message-container');
+                        if ((await element.count()) === 0) {
+                            throw new Error('Could not find discord-message-container element');
                         }
 
-                        const attachmentUrls = Array.from(message.attachments.values())
-                            .filter((attachment) => attachment.url)
-                            .map(
-                                (attachment) => `<img src="${attachment.url}" alt="attachment" />`,
-                            );
-
-                        // Get mentioned users info
-                        const mentionedUsers = new Map<string, string>();
-                        message.mentions.users.forEach((user) => {
-                            mentionedUsers.set(user.id, user.username);
+                        const imageBuffer = await element.screenshot({
+                            // fullPage: true,
+                            type: 'png',
                         });
-
-                        // Prepare mentioned roles info
-                        const mentionedRoles = new Map<string, string>();
-                        message.mentions.roles.forEach((role) => {
-                            mentionedRoles.set(role.id, role.name);
-                        });
-
-                        const response = await this.ctx.webserver.request<PlaywrightRenderRequest>(
-                            'POST',
-                            'playwright/render',
-                            {
-                                attachments: attachmentUrls.length > 0 ? attachmentUrls : null,
-                                avatar: member.user.displayAvatarURL({
-                                    forceStatic: true,
-                                    size: 1024,
-                                }),
-                                channelId: message.channel.id,
-                                channelName:
-                                    message.channel.isTextBased() && 'name' in message.channel
-                                        ? message.channel.name
-                                        : 'channel',
-                                content: message.content || '',
-                                customData: {
-                                    mentionedRoles: Object.fromEntries(mentionedRoles),
-                                    mentionedUsers: Object.fromEntries(mentionedUsers),
-                                },
-                                roleIcon:
-                                    roleIconUrl || 'https://cdn.discordapp.com/embed/avatars/0.png',
-                                roleId: typeof coloredRole === 'string' ? null : coloredRole.id,
-                                roleName:
-                                    typeof coloredRole === 'string' ? 'Role' : coloredRole.name,
-                                timestamp: this.ctx.webserver.sanitize(timestamp),
-                                userId: message.author?.id,
-                                username:
-                                    this.ctx.webserver.sanitize(
-                                        message.author?.username || 'Unknown User',
-                                    ) +
-                                    (message.member
-                                        ? ` (${this.ctx.webserver.sanitize(
-                                              message.member.nickname ||
-                                                  message.author?.globalName ||
-                                                  '',
-                                          )})`
-                                        : ''),
-                                usernameColor:
-                                    typeof coloredRole === 'string'
-                                        ? coloredRole
-                                        : coloredRole.hexColor,
-                                ...(repliedToMessage && repliedToMember
-                                    ? {
-                                          replyAvatar: repliedToMessage.author.displayAvatarURL(),
-                                          replyContent: repliedToMessage.content || '',
-                                          replyUsername:
-                                              '@' +
-                                              this.ctx.webserver.sanitize(
-                                                  repliedToMember.user.username || 'Unknown User',
-                                              ),
-                                          replyUsernameColor:
-                                              typeof repliedColorRole === 'string'
-                                                  ? repliedColorRole
-                                                  : repliedColorRole.hexColor,
-                                      }
-                                    : {}),
-                            },
-                            true,
-                        );
-
-                        const buffer = await response.arrayBuffer();
-                        const imageBuffer = Buffer.from(buffer);
+                        await browser.close();
 
                         const attachment = new AttachmentBuilder(imageBuffer, {
                             name: 'screenshot.png',
                         });
+
                         await skullboardChannel.send({
-                            embeds: [
-                                {
-                                    color: global.embedColor,
-                                    fields: [
-                                        {
-                                            inline: true,
-                                            name: 'Author',
-                                            value: `<@${message.author?.id}>`,
-                                        },
-                                    ],
-                                    image: {
-                                        url: 'attachment://screenshot.png',
-                                    },
-                                    timestamp: new Date().toISOString(),
-                                    title: `${message.author?.username} (${message.author?.id})`,
-                                },
+                            components: [
+                                new ContainerBuilder()
+                                    .addTextDisplayComponents((textDisplay) =>
+                                        textDisplay.setContent(
+                                            `## ${member.displayName || member.user.username} get 💀!`,
+                                        ),
+                                    )
+                                    .addSeparatorComponents((separator) =>
+                                        separator.setSpacing(SeparatorSpacingSize.Large),
+                                    )
+                                    .addMediaGalleryComponents((mediaGalleryItem) =>
+                                        mediaGalleryItem.addItems((item) =>
+                                            item.setURL('attachment://screenshot.png'),
+                                        ),
+                                    )
+                                    .addSeparatorComponents((separator) =>
+                                        separator.setSpacing(SeparatorSpacingSize.Large),
+                                    )
+                                    .addActionRowComponents((actionRow) =>
+                                        actionRow.addComponents(
+                                            new ButtonBuilder()
+                                                .setLabel('Jump to Message')
+                                                .setStyle(ButtonStyle.Link)
+                                                .setURL(
+                                                    `https://discord.com/channels/${message.guildId}/${message.channel.id}/${message.id}`,
+                                                ),
+                                            new ButtonBuilder()
+                                                .setLabel('View Profile')
+                                                .setStyle(ButtonStyle.Link)
+                                                .setURL(
+                                                    `https://discord.com/users/${message.author?.id}`,
+                                                ),
+                                        ),
+                                    ),
                             ],
                             files: [attachment],
+                            flags: MessageFlags.IsComponentsV2,
                         });
                     } catch (error) {
-                        console.error('Error generating message image:', error);
+                        console.error('Error generating message screenshot:', error);
+                        // Fallback to text-based embed
                         await skullboardChannel.send({
                             embeds: [
                                 {
