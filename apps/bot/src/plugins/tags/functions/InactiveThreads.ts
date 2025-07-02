@@ -3,14 +3,11 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ThreadChannel } from "dis
 import { Context } from "../../../classes/context";
 
 export async function checkInactiveThreads(ctx: Context) {
-    if (!ctx || !ctx.channels) {
-        console.error("[Error] Discord client is not properly initialized in the context.");
-        return;
-    }
+    if (!ctx || !ctx.channels) return;
 
+    // TODO: Do these dinamically or either as enviroment variable
     const INACTIVITY_LIMIT = 1 * 60 * 1000;
     const keys = await ctx.store.getAllThreads();
-    console.log("[DEBUG] Retrieved thread keys from Redis:", keys);
 
     for (const key of keys) {
         const threadId = key.split(":").pop();
@@ -18,22 +15,21 @@ export async function checkInactiveThreads(ctx: Context) {
 
         try {
             const threadData = await ctx.store.getThreadTimestamp(threadId);
-            console.log(`[DEBUG] Thread data for ${threadId}:`, threadData);
             if (!threadData) continue;
 
             const thread = await ctx.channels.fetch(threadId) as ThreadChannel;
 
             if (thread.archived) {
-                console.log(`[INFO] Thread ${threadId} is archived. Removing from Redis.`);
                 await ctx.store.deleteThread(threadId);
                 continue;
             }
 
             const now = Date.now();
+            // TODO: Do these dinamically or either as enviroment variable
             const GRACE_PERIOD = 60 * 1000;
 
             if (threadData.embedTimestamp && now - Number(threadData.embedTimestamp) > INACTIVITY_LIMIT + GRACE_PERIOD && Number(threadData.lastMessage) <= Number(threadData.embedTimestamp)) {
-                console.log(`[INFO] Closing thread ${threadId} due to inactivity.`);
+                //TODO: Instead sending a new message, edit the existing embed one
                 await thread.send({
                     content: `This thread has been closed due to inactivity. If you need further assistance, please create a new thread.`,
                 });
@@ -78,7 +74,6 @@ export async function checkInactiveThreads(ctx: Context) {
                         lastMessage: threadData.lastMessage,
                         userId: threadData.userId,
                     }));
-                    console.log(`[INFO] Inactivity embed sent for thread ${threadId}.`);
                 }
             }
         } catch (error) {
@@ -96,12 +91,10 @@ export async function cleanUpExpiredThreads(ctx) {
             const thread = await ctx.channels.fetch(threadId) as ThreadChannel;
 
             if (thread.archived) {
-                console.log(`[INFO] Thread ${threadId} is archived. Removing from Redis.`);
                 await ctx.store.deleteThread(threadId);
                 continue;
             }
         } catch {
-            console.log(`Thread ${threadId} no longer exists. Removing from Redis.`);
             await ctx.store.deleteThread(threadId);
         }
     }
