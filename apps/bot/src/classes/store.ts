@@ -5,6 +5,12 @@ import { Context } from './context';
 
 type GuildSnowflake = Record<'guild', Snowflake>;
 
+type ThreadData = {
+    embedTimestamp: string;
+    lastMessage: number;
+    userId: string;
+};
+
 type UserSnowflake = Record<'user', Snowflake>;
 
 export class Store extends Redis {
@@ -37,12 +43,27 @@ export class Store extends Redis {
         this.del(JSON.stringify(options));
     }
 
+    public async deleteThread(threadId: string): Promise<void> {
+        await this.ensureConnection();
+        const key = `support:thread:${threadId}`;
+        await this.del(key);
+    }
+
     public async findGuild(options: GuildSnowflake): Promise<boolean> {
         return (await this.getGuild(options)) !== null;
     }
 
+    public async findThread(threadId: string): Promise<boolean> {
+        return (await this.getThread(threadId)) !== null;
+    }
+
     public async findUser(options: UserSnowflake): Promise<boolean> {
         return (await this.getUser(options)) !== null;
+    }
+
+    public async getAllThreads(): Promise<string[]> {
+        await this.ensureConnection();
+        return this.keys('support:thread:*');
     }
 
     public async getGuild<T>(options: GuildSnowflake): Promise<null | T> {
@@ -72,6 +93,19 @@ export class Store extends Redis {
             return parsed as T;
         } catch (err) {
             console.error('Error in getGuild:', err);
+            return null;
+        }
+    }
+
+    public async getThread(threadId: string): Promise<null | ThreadData> {
+        await this.ensureConnection();
+        try {
+            const key = `support:thread:${threadId}`;
+            const raw = await this.get(key);
+            if (!raw) return null;
+            return JSON.parse(raw) as ThreadData;
+        } catch (err) {
+            console.error('Error in getThread:', err);
             return null;
         }
     }
@@ -106,11 +140,37 @@ export class Store extends Redis {
         this.set(key, JSON.stringify(keys || []));
     }
 
+    public async setThread(
+        threadId: string,
+        userId: string,
+        embedTimestamp: string,
+    ): Promise<void> {
+        await this.ensureConnection();
+        try {
+            const key = `support:thread:${threadId}`;
+            const data: ThreadData = {
+                embedTimestamp,
+                lastMessage: Date.now(),
+                userId
+            };
+            await this.set(key, JSON.stringify(data));
+        } catch (err) {
+            console.error('Error in setThread:', err);
+            throw err;
+        }
+    }
+
     public async setUserKey<T>(options: UserSnowflake, data: T): Promise<void> {
         await this.ensureConnection();
         const key = JSON.stringify(options);
 
         await this.set(key, JSON.stringify(data));
+    }
+
+    public async threadExists(threadId: string): Promise<number> {
+        await this.ensureConnection();
+        const key = `support:thread:${threadId}`;
+        return this.exists(key);
     }
 
     private async ensureConnection(): Promise<void> {
