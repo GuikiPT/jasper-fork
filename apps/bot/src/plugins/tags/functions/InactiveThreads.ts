@@ -17,7 +17,7 @@ export async function checkInactiveThreads(ctx: Context) {
         if (!threadId) continue;
 
         try {
-            const threadData = await ctx.store.getThread(threadId);
+            const threadData = await ctx.store.getThreadTimestamp(threadId);
             console.log(`[DEBUG] Thread data for ${threadId}:`, threadData);
             if (!threadData) continue;
 
@@ -30,7 +30,7 @@ export async function checkInactiveThreads(ctx: Context) {
             }
 
             const now = Date.now();
-            const GRACE_PERIOD = 30 * 1000; // 30 second grace period for user interactions
+            const GRACE_PERIOD = 60 * 1000;
 
             if (threadData.embedTimestamp && now - Number(threadData.embedTimestamp) > INACTIVITY_LIMIT + GRACE_PERIOD && Number(threadData.lastMessage) <= Number(threadData.embedTimestamp)) {
                 console.log(`[INFO] Closing thread ${threadId} due to inactivity.`);

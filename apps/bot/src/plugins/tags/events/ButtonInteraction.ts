@@ -2,6 +2,7 @@ import { ButtonInteraction, ComponentType, Events, MessageFlags, TextInputStyle 
 
 import { Context } from '../../../classes/context';
 import { defineEvent } from '../../../define';
+import { Options } from '../../../services/settingsService';
 
 export const Event = defineEvent<ButtonInteraction>({
     event: {
@@ -9,34 +10,34 @@ export const Event = defineEvent<ButtonInteraction>({
         once: false,
     },
     on: async (interaction: ButtonInteraction, ctx: Context) => {
-        if (!interaction.isButton()) return;
+        await ctx.services.settings.configure<Options>({ guildId: interaction.guildId! });
 
-        console.log(`[DEBUG] Button interaction received: ${interaction.customId}`);
+        const { Channels } = await ctx.services.settings.getSettings();
+        const allowedTagChannels = Channels.AllowedTagChannels;
+
+        if (!allowedTagChannels.includes(interaction.channel.parentId)) return;
+
+        if (!interaction.isButton()) return;
 
         if (interaction.customId.startsWith('close_thread_')) {
             const threadId = interaction.customId.split('_')[2];
-            console.log(`[DEBUG] Close thread button clicked for thread: ${threadId}`);
 
             const thread = await ctx.channels.fetch(threadId).catch(() => null);
             if (!thread || !thread.isThread()) {
-                console.log(`[DEBUG] Thread ${threadId} not found or not a thread`);
                 await interaction.reply({
                     content: 'This thread no longer exists.',
-                    flags: MessageFlags.Ephemeral
+                    flags: MessageFlags.Ephemeral,
                 });
                 return;
             }
 
             if (thread.archived) {
-                console.log(`[DEBUG] Thread ${threadId} is already archived`);
                 await interaction.reply({
                     content: 'This thread is already archived.',
-                    flags: MessageFlags.Ephemeral
+                    flags: MessageFlags.Ephemeral,
                 });
                 return;
             }
-
-            console.log(`[DEBUG] Showing modal for thread: ${threadId}`);
 
             await interaction.showModal({
                 components: [
@@ -63,38 +64,35 @@ export const Event = defineEvent<ButtonInteraction>({
 
         if (interaction.customId.startsWith('keep_thread_')) {
             const threadId = interaction.customId.split('_')[2];
-            console.log(`[DEBUG] Keep thread button clicked for thread: ${threadId}`);
 
             try {
                 const thread = await ctx.channels.fetch(threadId).catch(() => null);
                 if (!thread || !thread.isThread()) {
-                    console.log(`[DEBUG] Thread ${threadId} not found or not a thread`);
                     await interaction.reply({
                         content: 'This thread no longer exists.',
-                        flags: MessageFlags.Ephemeral
+                        flags: MessageFlags.Ephemeral,
                     });
                     return;
                 }
 
                 if (thread.archived) {
-                    console.log(`[DEBUG] Thread ${threadId} is already archived`);
                     await interaction.reply({
                         content: 'This thread is already archived.',
-                        flags: MessageFlags.Ephemeral
+                        flags: MessageFlags.Ephemeral,
                     });
                     return;
                 }
 
-                const threadData = await ctx.store.getThread(threadId);
+                const threadData = await ctx.store.getThreadTimestamp(threadId);
                 if (threadData) {
-                    await ctx.store.set(`support:thread:${threadId}`, JSON.stringify({
-                        lastMessage: Date.now(),
-                        userId: threadData.userId,
-                    }));
-                    console.log(`[DEBUG] Updated thread data for ${threadId} - reset inactivity timer`);
+                    await ctx.store.set(
+                        `support:thread:${threadId}`,
+                        JSON.stringify({
+                            lastMessage: Date.now(),
+                            userId: threadData.userId,
+                        }),
+                    );
                 }
-
-                console.log(`[DEBUG] Successfully kept thread ${threadId} open`);
 
                 await interaction.update({
                     components: [],
@@ -102,8 +100,9 @@ export const Event = defineEvent<ButtonInteraction>({
                     embeds: [
                         {
                             color: 0x00ff00,
-                            description: "Thread will remain open. The inactivity timer has been reset.",
-                            title: "Thread Kept Open",
+                            description:
+                                'Thread will remain open. The inactivity timer has been reset.',
+                            title: 'Thread Kept Open',
                         },
                     ],
                 });
@@ -111,7 +110,7 @@ export const Event = defineEvent<ButtonInteraction>({
                 console.error(`[Error keeping thread open ${threadId}]:`, error);
                 await interaction.reply({
                     content: 'An error occurred while trying to keep the thread open.',
-                    flags: MessageFlags.Ephemeral
+                    flags: MessageFlags.Ephemeral,
                 });
             }
             return;

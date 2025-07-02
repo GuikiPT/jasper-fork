@@ -2,6 +2,7 @@ import { Events, MessageFlags, ModalSubmitInteraction } from 'discord.js';
 
 import { Context } from '../../../classes/context';
 import { defineEvent } from '../../../define';
+import { Options } from '../../../services/settingsService';
 
 export const Event = defineEvent<ModalSubmitInteraction>({
     event: {
@@ -9,28 +10,36 @@ export const Event = defineEvent<ModalSubmitInteraction>({
         once: false,
     },
     on: async (interaction: ModalSubmitInteraction, ctx: Context) => {
+        await ctx.services.settings.configure<Options>({ guildId: interaction.guildId! });
+
+        const { Channels } = await ctx.services.settings.getSettings();
+        const allowedTagChannels = Channels.AllowedTagChannels;
+
+        if (!allowedTagChannels.includes(interaction.channel.parentId)) return;
+
         if (!interaction.isModalSubmit()) return;
 
         const customIdParts = interaction.customId.split('_');
-        if (customIdParts.length < 4 || customIdParts.slice(0, 3).join('_') !== 'close_thread_reason') return;
+        if (
+            customIdParts.length < 4 ||
+            customIdParts.slice(0, 3).join('_') !== 'close_thread_reason'
+        )
+            return;
 
         const threadId = customIdParts[3];
-        console.log(`[DEBUG] Processing modal submit for thread: ${threadId}`);
 
         const thread = await ctx.channels.fetch(threadId).catch(() => null);
         if (!thread || !thread.isThread()) {
-            console.log(`[DEBUG] Thread ${threadId} not found or not a thread`);
             return interaction.reply({
                 content: 'This thread no longer exists.',
-                flags: MessageFlags.Ephemeral
+                flags: MessageFlags.Ephemeral,
             });
         }
 
         if (thread.archived) {
-            console.log(`[DEBUG] Thread ${threadId} is already archived`);
             return interaction.reply({
                 content: 'This thread is already archived.',
-                flags: MessageFlags.Ephemeral
+                flags: MessageFlags.Ephemeral,
             });
         }
 
@@ -40,78 +49,52 @@ export const Event = defineEvent<ModalSubmitInteraction>({
             await thread.fetch();
 
             if (thread.archived) {
-                console.log(`[DEBUG] Thread ${threadId} was archived while processing modal`);
                 return interaction.reply({
                     content: 'This thread was archived while you were submitting the form.',
-                    flags: MessageFlags.Ephemeral
+                    flags: MessageFlags.Ephemeral,
                 });
             }
-
-            console.log(`[DEBUG] Closing thread ${threadId} with reason: ${reason}`);
 
             await interaction.reply({
                 content: 'The thread has been successfully closed.',
                 flags: MessageFlags.Ephemeral,
             });
 
+            const closureMessage = {
+                content: `Post marked as closed by the OP <@${interaction.user.id}>`,
+                embeds: [
+                    {
+                        description: reason,
+                        title: 'Reason',
+                    },
+                ],
+            };
+
             try {
+                // TODO: Check these, these isn't the best way to do this
+                // TODO: Maybe use store to also store the last warning message
+                // TODO: id and reuse it here
                 const messages = await thread.messages.fetch({ limit: 10 });
-                const inactivityMessage = messages.find(msg =>
-                    msg.embeds.length > 0 &&
-                    msg.embeds[0].title === "Do you still need help with your issue?"
+                const inactivityMessage = messages.find(
+                    (msg) =>
+                        msg.embeds.length > 0 &&
+                        msg.embeds[0].title === 'Do you still need help with your issue?',
                 );
 
                 if (inactivityMessage) {
                     await inactivityMessage.edit({
                         components: [],
-                        content: `Post marked as Closed by the OP <@${interaction.user.id}>`,
-                        embeds: [
-                            {
-                                color: 0xff0000,
-                                fields: [
-                                    {
-                                        inline: true,
-                                        name: 'Reason',
-                                        value: reason,
-                                    },
-                                ],
-                            },
-                        ],
+                        ...closureMessage,
                     });
                 } else {
-                    await thread.send({
-                        content: `Post marked as Closed by the OP <@${interaction.user.id}>`,
-                        embeds: [
-                            {
-                                color: 0xff0000,
-                                fields: [
-                                    {
-                                        inline: true,
-                                        name: 'Reason',
-                                        value: reason,
-                                    },
-                                ],
-                            },
-                        ],
-                    });
+                    await thread.send(closureMessage);
                 }
             } catch (editError) {
-                console.error(`[Error editing inactivity message for thread ${threadId}]:`, editError);
-                await thread.send({
-                    content: `Post marked as Closed by the OP <@${interaction.user.id}>`,
-                    embeds: [
-                        {
-                            color: 0xff0000,
-                            fields: [
-                                {
-                                    inline: true,
-                                    name: 'Reason',
-                                    value: reason,
-                                },
-                            ],
-                        },
-                    ],
-                });
+                console.error(
+                    `[Error editing inactivity message for thread ${threadId}]:`,
+                    editError,
+                );
+                await thread.send(closureMessage);
             }
 
             await thread.setLocked(true);

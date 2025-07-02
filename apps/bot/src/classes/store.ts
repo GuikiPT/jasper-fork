@@ -54,7 +54,7 @@ export class Store extends Redis {
     }
 
     public async findThread(threadId: string): Promise<boolean> {
-        return (await this.getThread(threadId)) !== null;
+        return (await this.getThreadTimestamp(threadId)) !== null;
     }
 
     public async findUser(options: UserSnowflake): Promise<boolean> {
@@ -97,7 +97,7 @@ export class Store extends Redis {
         }
     }
 
-    public async getThread(threadId: string): Promise<null | ThreadData> {
+    public async getThreadTimestamp(threadId: string): Promise<null | ThreadData> {
         await this.ensureConnection();
         try {
             const key = `support:thread:${threadId}`;
@@ -105,7 +105,7 @@ export class Store extends Redis {
             if (!raw) return null;
             return JSON.parse(raw) as ThreadData;
         } catch (err) {
-            console.error('Error in getThread:', err);
+            console.error('Error in getThreadTimestamp:', err);
             return null;
         }
     }
@@ -140,7 +140,7 @@ export class Store extends Redis {
         this.set(key, JSON.stringify(keys || []));
     }
 
-    public async setThread(
+    public async setThreadTimestamp(
         threadId: string,
         userId: string,
         embedTimestamp: string,
@@ -155,7 +155,7 @@ export class Store extends Redis {
             };
             await this.set(key, JSON.stringify(data));
         } catch (err) {
-            console.error('Error in setThread:', err);
+            console.error('Error in setThreadTimestamp:', err);
             throw err;
         }
     }
