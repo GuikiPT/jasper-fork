@@ -15,6 +15,7 @@ import {
     SeparatorBuilder,
     SeparatorSpacingSize,
     TextDisplayBuilder,
+    TextInputStyle,
 } from 'discord.js';
 
 import { Context } from '../classes/context';
@@ -44,6 +45,12 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
                 await this.onListSubCommandButtons(interaction);
             } else if (interaction.customId.startsWith('add_topic_subcommand_button_')) {
                 await this.onAddTopicSubCommandButtons(interaction);
+            }
+            else if (interaction.customId.startsWith('close_thread_')) {
+                await this.onCloseThreadCommandButton(interaction);
+            }
+            else if (interaction.customId.startsWith('keep_thread_')) {
+                await this.onKeepThreadCommandButton(interaction);
             }
         }
         if (interaction.isModalSubmit()) {
@@ -304,6 +311,118 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
                 throw 'Error on TagEditModal ' + error.stack || error;
             }
         }
+
+        if (interaction.customId.startsWith('close_thread_reason_')) {
+            await this.ctx.services.settings.configure<Options>({ guildId: interaction.guildId! });
+
+            const { Channels } = await this.ctx.services.settings.getSettings();
+            const allowedTagChannels = Channels.AllowedTagChannels;
+
+            if (!allowedTagChannels.includes(interaction.channel.parentId)) return;
+
+            const customIdParts = interaction.customId.split('_');
+            if (
+                customIdParts.length < 4 ||
+                customIdParts.slice(0, 3).join('_') !== 'close_thread_reason'
+            )
+                return;
+
+            const threadId = customIdParts[3];
+
+            const thread = await this.ctx.channels.fetch(threadId).catch(() => null);
+            if (!thread || !thread.isThread()) {
+                await interaction.reply({
+                    content: 'This thread no longer exists.',
+                    flags: MessageFlags.Ephemeral,
+                });
+                return;
+            }
+
+            if (thread.archived) {
+                await interaction.reply({
+                    content: 'This thread is already archived.',
+                    flags: MessageFlags.Ephemeral,
+                });
+                return;
+            }
+
+            const reason = interaction.fields.getTextInputValue('reason');
+
+            try {
+                await thread.fetch();
+
+                if (thread.archived) {
+                    await interaction.reply({
+                        content: 'This thread was archived while you were submitting the form.',
+                        flags: MessageFlags.Ephemeral,
+                    });
+                    return;
+                }
+
+                await interaction.reply({
+                    content: 'The thread has been successfully closed.',
+                    flags: MessageFlags.Ephemeral,
+                });
+
+                const closureMessage = {
+                    content: `Post marked as closed by the OP <@${interaction.user.id}>`,
+                    embeds: [
+                        {
+                            description: reason,
+                            title: 'Reason',
+                        },
+                    ],
+                };
+
+                try {
+                    const threadData = await this.ctx.store.getThreadTimestamp(threadId);
+                    
+                    if (threadData?.warningMessageId) {
+                        try {
+                            const warningMessage = await thread.messages.fetch(threadData.warningMessageId);
+                            await warningMessage.edit({
+                                components: [],
+                                ...closureMessage,
+                            });
+                        } catch (fetchError) {
+                            console.error(
+                                `[Error editing warning message ${threadData.warningMessageId} for thread ${threadId}]:`,
+                                fetchError,
+                            );
+                            await thread.send(closureMessage);
+                        }
+                    } else {
+                        await thread.send(closureMessage);
+                    }
+                } catch (editError) {
+                    console.error(
+                        `[Error editing inactivity message for thread ${threadId}]:`,
+                        editError,
+                    );
+                    await thread.send(closureMessage);
+                }
+
+                await thread.setLocked(true);
+                await thread.setArchived(true, 'Thread closed by user.');
+
+                return await this.ctx.store.deleteThread(threadId);
+            } catch (error) {
+
+                if (error.message && error.message.includes('Thread is archived')) {
+                    await interaction.reply({
+                        content: 'This thread was archived while you were submitting the form.',
+                        flags: MessageFlags.Ephemeral,
+                    });
+                    return;
+                }
+
+                await interaction.reply({
+                    content: 'An error occurred while closing the thread. Please try again.',
+                    flags: MessageFlags.Ephemeral,
+                });
+                return;
+            }
+        }
     }
 
     private async onAddTopicSubCommandButtons(interaction: ButtonInteraction): Promise<void> {
@@ -407,6 +526,113 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
 
         this.ctx.pagination.set(author, currentUserState);
         await updateEmbed();
+    }
+
+    private async onCloseThreadCommandButton(interaction: ButtonInteraction): Promise<void> {
+        const { Channels } = await this.ctx.services.settings.getSettings();
+        const allowedTagChannels = Channels.AllowedTagChannels;
+
+        if (!allowedTagChannels.includes(interaction.channel.parentId)) return;
+
+        const threadId = interaction.customId.split('_')[2];
+
+        const thread = await this.ctx.channels.fetch(threadId).catch(() => null);
+        if (!thread || !thread.isThread()) {
+            await interaction.reply({
+                content: 'This thread no longer exists.',
+                flags: MessageFlags.Ephemeral,
+            });
+            return;
+        }
+
+        if (thread.archived) {
+            await interaction.reply({
+                content: 'This thread is already archived.',
+                flags: MessageFlags.Ephemeral,
+            });
+            return;
+        }
+
+        await interaction.showModal({
+            components: [
+                {
+                    components: [
+                        {
+                            customId: 'reason',
+                            label: 'Reason for closing thread',
+                            maxLength: 1000,
+                            placeholder: 'Please provide a reason for closing this thread...',
+                            required: true,
+                            style: TextInputStyle.Paragraph,
+                            type: ComponentType.TextInput,
+                        },
+                    ],
+                    type: ComponentType.ActionRow,
+                },
+            ],
+            customId: `close_thread_reason_${threadId}`,
+            title: 'Close Thread',
+        });
+    }
+
+    private async onKeepThreadCommandButton(interaction: ButtonInteraction): Promise<void> {
+        const { Channels } = await this.ctx.services.settings.getSettings();
+        const allowedTagChannels = Channels.AllowedTagChannels;
+
+        if (!allowedTagChannels.includes(interaction.channel.parentId)) return;
+    
+        const threadId = interaction.customId.split('_')[2];
+
+        try {
+            const thread = await this.ctx.channels.fetch(threadId).catch(() => null);
+            if (!thread || !thread.isThread()) {
+                await interaction.reply({
+                    content: 'This thread no longer exists.',
+                    flags: MessageFlags.Ephemeral,
+                });
+                return;
+            }
+
+            if (thread.archived) {
+                await interaction.reply({
+                    content: 'This thread is already archived.',
+                    flags: MessageFlags.Ephemeral,
+                });
+                return;
+            }
+
+            const threadData = await this.ctx.store.getThreadTimestamp(threadId);
+            if (threadData) {
+                await this.ctx.store.set(
+                    `support:thread:${threadId}`,
+                    JSON.stringify({
+                        embedTimestamp: threadData.embedTimestamp,
+                        lastMessage: Date.now(),
+                        userId: threadData.userId,
+                        ...(threadData.warningMessageId && { warningMessageId: threadData.warningMessageId }),
+                    }),
+                );
+            }
+
+            await interaction.update({
+                components: [],
+                content: `<@${interaction.user.id}> chose to keep this thread open.`,
+                embeds: [
+                    {
+                        color: 0x00ff00,
+                        description:
+                            'Thread will remain open. The inactivity timer has been reset.',
+                        title: 'Thread Kept Open',
+                    },
+                ],
+            });
+        } catch (error) {
+            console.error(`[Error keeping thread open ${threadId}]:`, error);
+            await interaction.reply({
+                content: 'An error occurred while trying to keep the thread open.',
+                flags: MessageFlags.Ephemeral,
+            });
+        }
     }
 
     private async onListSubCommandButtons(interaction: ButtonInteraction): Promise<void> {

@@ -101,6 +101,16 @@ Slowmode settings:
 - `SLOWMODE_RESET_SLOWMODE`: Reset slowmode interval
 - `SLOWMODE_RESET_TIME`: Time to reset slowmode
 
+Thread inactivity settings:
+
+- `THREAD_INACTIVITY_LIMIT`: Time limit (in milliseconds) before a thread is considered inactive (default: 172800000 - 2 days)
+- `THREAD_GRACE_PERIOD`: Grace period (in milliseconds) after inactivity limit before thread closure (default: 86400000 - 1 day)
+
+API configuration:
+
+- `JASPER_API_URL`: Jasper API endpoint URL
+- `JASPER_API_KEY`: API key for Jasper services
+
 ## Development
 
 1. Copy `.env.example` to `.env` and fill in the values

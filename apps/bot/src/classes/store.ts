@@ -9,6 +9,7 @@ type ThreadData = {
     embedTimestamp: string;
     lastMessage: number;
     userId: string;
+    warningMessageId?: string;
 };
 
 type UserSnowflake = Record<'user', Snowflake>;
@@ -144,6 +145,7 @@ export class Store extends Redis {
         threadId: string,
         userId: string,
         embedTimestamp: string,
+        warningMessageId?: string,
     ): Promise<void> {
         await this.ensureConnection();
         try {
@@ -151,7 +153,8 @@ export class Store extends Redis {
             const data: ThreadData = {
                 embedTimestamp,
                 lastMessage: Date.now(),
-                userId
+                userId,
+                warningMessageId
             };
             await this.set(key, JSON.stringify(data));
         } catch (err) {

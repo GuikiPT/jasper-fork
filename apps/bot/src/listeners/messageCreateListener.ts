@@ -37,7 +37,15 @@ export default class MessageCreateListener extends Listener<'messageCreate'> {
 
         if (message.guild) {
             await this.ctx.services.settings.configure<Options>({ guildId: message.guild.id });
-            const { Channels } = this.ctx.services.settings.getSettings();
+            const { Channels } = await this.ctx.services.settings.getSettings();
+
+            const allowedTagChannels = Channels.AllowedTagChannels;
+
+            if (message.channel.isThread() && allowedTagChannels.includes(message.channel.parentId)) {
+                if (message.author.id === message.channel.ownerId) {
+                    await this.ctx.store.setThreadTimestamp(message.channel.id, message.author.id, '');
+                }
+            }
 
             if (Channels.AutomaticSlowmodeChannels?.includes(message.channel.id)) {
                 if (this.ctx.env.get('slowmode') == '0') return;

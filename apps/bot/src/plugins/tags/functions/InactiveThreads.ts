@@ -5,8 +5,8 @@ import { Context } from "../../../classes/context";
 export async function checkInactiveThreads(ctx: Context) {
     if (!ctx || !ctx.channels) return;
 
-    // TODO: Do these dinamically or either as enviroment variable
-    const INACTIVITY_LIMIT = 1 * 60 * 1000;
+    const INACTIVITY_LIMIT = parseInt(ctx.env.get('THREAD_INACTIVITY_LIMIT') || '3600000');
+    const GRACE_PERIOD = parseInt(ctx.env.get('THREAD_GRACE_PERIOD') || '60000');
     const keys = await ctx.store.getAllThreads();
 
     for (const key of keys) {
@@ -25,14 +25,32 @@ export async function checkInactiveThreads(ctx: Context) {
             }
 
             const now = Date.now();
-            // TODO: Do these dinamically or either as enviroment variable
-            const GRACE_PERIOD = 60 * 1000;
 
             if (threadData.embedTimestamp && now - Number(threadData.embedTimestamp) > INACTIVITY_LIMIT + GRACE_PERIOD && Number(threadData.lastMessage) <= Number(threadData.embedTimestamp)) {
-                //TODO: Instead sending a new message, edit the existing embed one
-                await thread.send({
+                const closureMessage = {
+                    components: [],
                     content: `This thread has been closed due to inactivity. If you need further assistance, please create a new thread.`,
-                });
+                    embeds: [
+                        {
+                            color: 0xff0000,
+                            description: "This thread was automatically closed due to inactivity.",
+                            title: "Thread Closed",
+                        },
+                    ],
+                };
+
+                if (threadData.warningMessageId) {
+                    try {
+                        const warningMessage = await thread.messages.fetch(threadData.warningMessageId);
+                        await warningMessage.edit(closureMessage);
+                    } catch (fetchError) {
+                        console.error(`[Error editing warning message ${threadData.warningMessageId} for thread ${threadId}]:`, fetchError);
+                        await thread.send(closureMessage);
+                    }
+                } else {
+                    await thread.send(closureMessage);
+                }
+
                 await thread.setLocked(true);
                 await thread.setArchived(true);
                 await ctx.store.deleteThread(threadId);
@@ -73,6 +91,7 @@ export async function checkInactiveThreads(ctx: Context) {
                         embedTimestamp: embedMessage.createdTimestamp,
                         lastMessage: threadData.lastMessage,
                         userId: threadData.userId,
+                        warningMessageId: embedMessage.id,
                     }));
                 }
             }
