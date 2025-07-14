@@ -1,5 +1,18 @@
 import { ApplicationCommandOptionType } from '@antibot/interactions';
-import { ButtonStyle, ChatInputCommandInteraction, ComponentType, MessageFlags } from 'discord.js';
+import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ChatInputCommandInteraction,
+    ContainerBuilder,
+    MessageActionRowComponentBuilder,
+    MessageFlags,
+    SectionBuilder,
+    SeparatorBuilder,
+    SeparatorSpacingSize,
+    TextDisplayBuilder,
+    ThumbnailBuilder,
+} from 'discord.js';
 
 import { chunk } from '../../../array';
 import { Context } from '../../../classes/context';
@@ -28,56 +41,92 @@ export const AddTopicSubCommand = defineSubCommand({
             return;
         }
 
-        const components = [
-            {
-                components: [
-                    {
-                        customId: `add_topic_subcommand_button_previous_${interaction.user.id}`,
-                        disabled: state.addTopicPages.page === 0,
-                        label: 'Previous',
-                        style: ButtonStyle.Primary as const,
-                        type: ComponentType.Button as const,
-                    },
-                    {
-                        customId: `add_topic_subcommand_button_home_${interaction.user.id}`,
-                        label: 'Home',
-                        style: ButtonStyle.Secondary as const,
-                        type: ComponentType.Button as const,
-                    },
-                    {
-                        customId: `add_topic_subcommand_button_next_${interaction.user.id}`,
-                        disabled: state.addTopicPages.page === state.addTopicPages.pages.length - 1,
-                        label: 'Next',
-                        style: ButtonStyle.Primary as const,
-                        type: ComponentType.Button as const,
-                    },
-                ],
-                type: ComponentType.ActionRow as const,
-            },
-        ];
-
         if (topicsExistInDB.includes(topic)) {
-            await interaction.reply({
-                components,
-                content: `For the record, **${topic}** is already in the topics list.`,
-                embeds: [
-                    {
-                        color: global.embedColor,
-                        description:
-                            state.addTopicPages.pages[state.addTopicPages.page]
+            const addTopicComponents = [
+                new ContainerBuilder()
+                    .setAccentColor(global.embedColor)
+                    .addSectionComponents(
+                        new SectionBuilder()
+                            .setThumbnailAccessory(
+                                new ThumbnailBuilder().setURL(interaction.guild?.iconURL()),
+                            )
+                            .addTextDisplayComponents(
+                                new TextDisplayBuilder().setContent(
+                                    '## Current Topics in Configuration',
+                                ),
+                            ),
+                    )
+                    .addSeparatorComponents(
+                        new SeparatorBuilder()
+                            .setSpacing(SeparatorSpacingSize.Small)
+                            .setDivider(true),
+                    )
+                    .addTextDisplayComponents(
+                        new TextDisplayBuilder().setContent(
+                            `For the record, **${topic}** is already in the topics list.`,
+                        ),
+                    )
+                    .addSeparatorComponents(
+                        new SeparatorBuilder()
+                            .setSpacing(SeparatorSpacingSize.Small)
+                            .setDivider(true),
+                    )
+                    .addTextDisplayComponents(
+                        new TextDisplayBuilder().setContent(
+                            (state.addTopicPages.pages[state.addTopicPages.page] || [])
                                 .map(
                                     (string, i) =>
                                         `**${state.addTopicPages.page * 10 + i + 1}.** *${string}*`,
                                 )
-                                .join('\n') || 'No topics',
-                        footer: {
-                            text: `Page: ${state.addTopicPages.page + 1}/${state.addTopicPages.pages.length} • Total Topics: ${topicsExistInDB.length}`,
-                        },
-                        thumbnail: { url: interaction.guild.iconURL() ?? '' },
-                        title: 'Current Topics in Configuration',
-                    },
-                ],
-                flags: MessageFlags.Ephemeral,
+                                .join('\n') || 'There are no topics configured.',
+                        ),
+                    )
+                    .addSeparatorComponents(
+                        new SeparatorBuilder()
+                            .setSpacing(SeparatorSpacingSize.Small)
+                            .setDivider(true),
+                    )
+                    .addTextDisplayComponents(
+                        new TextDisplayBuilder().setContent(
+                            `-# Page: ${state.addTopicPages.page + 1}/${state.addTopicPages.pages.length} • Total Topics: ${topicsExistInDB.length}`,
+                        ),
+                    )
+                    .addActionRowComponents(
+                        ...(topicsExistInDB.length > 10
+                            ? [
+                                  new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+                                      new ButtonBuilder()
+                                          .setStyle(ButtonStyle.Primary)
+                                          .setLabel('Previous')
+                                          .setCustomId(
+                                              `add_topic_subcommand_button_previous_${interaction.user.id}`,
+                                          )
+                                          .setDisabled(state.addTopicPages.page === 0),
+                                      new ButtonBuilder()
+                                          .setStyle(ButtonStyle.Secondary)
+                                          .setLabel('Home')
+                                          .setCustomId(
+                                              `add_topic_subcommand_button_home_${interaction.user.id}`,
+                                          ),
+                                      new ButtonBuilder()
+                                          .setStyle(ButtonStyle.Primary)
+                                          .setLabel('Next')
+                                          .setCustomId(
+                                              `add_topic_subcommand_button_next_${interaction.user.id}`,
+                                          )
+                                          .setDisabled(
+                                              state.addTopicPages.page ===
+                                                  state.addTopicPages.pages.length - 1,
+                                          ),
+                                  ),
+                              ]
+                            : []),
+                    ),
+            ];
+
+            await interaction.reply({
+                components: addTopicComponents,
+                flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
             });
             return;
         }
@@ -91,27 +140,85 @@ export const AddTopicSubCommand = defineSubCommand({
         const updatedPages = chunk(updatedTopics, 10);
         state.addTopicPages.pages = updatedPages;
 
-        await interaction.reply({
-            components,
-            content: `I've added **${topic}** to the topics list.`,
-            embeds: [
-                {
-                    color: global.embedColor,
-                    description:
-                        state.addTopicPages.pages[state.addTopicPages.page]
+        const addTopicComponents = [
+            new ContainerBuilder()
+                .setAccentColor(global.embedColor)
+                .addSectionComponents(
+                    new SectionBuilder()
+                        .setThumbnailAccessory(
+                            new ThumbnailBuilder().setURL(interaction.guild?.iconURL()),
+                        )
+                        .addTextDisplayComponents(
+                            new TextDisplayBuilder().setContent(
+                                '## Current Topics in Configuration',
+                            ),
+                        ),
+                )
+                .addSeparatorComponents(
+                    new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+                )
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(
+                        `I've added **${topic}** to the topics list.`,
+                    ),
+                )
+                .addSeparatorComponents(
+                    new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+                )
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(
+                        (state.addTopicPages.pages[state.addTopicPages.page] || [])
                             .map(
                                 (string, i) =>
                                     `**${state.addTopicPages.page * 10 + i + 1}.** *${string}*`,
                             )
-                            .join('\n') || 'No topics',
-                    footer: {
-                        text: `Page: ${state.addTopicPages.page + 1}/${state.addTopicPages.pages.length} • Total Topics: ${updatedTopics.length}`,
-                    },
-                    thumbnail: { url: interaction.guild.iconURL() ?? '' },
-                    title: 'Current Topics in Configuration',
-                },
-            ],
-            flags: MessageFlags.Ephemeral,
+                            .join('\n') || 'There are no topics configured.',
+                    ),
+                )
+                .addSeparatorComponents(
+                    new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+                )
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(
+                        `-# Page: ${state.addTopicPages.page + 1}/${state.addTopicPages.pages.length} • Total Topics: ${updatedTopics.length}`,
+                    ),
+                )
+                .addActionRowComponents(
+                    ...(updatedTopics.length > 10
+                        ? [
+                              new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+                                  new ButtonBuilder()
+                                      .setStyle(ButtonStyle.Primary)
+                                      .setLabel('Previous')
+                                      .setCustomId(
+                                          `add_topic_subcommand_button_previous_${interaction.user.id}`,
+                                      )
+                                      .setDisabled(state.addTopicPages.page === 0),
+                                  new ButtonBuilder()
+                                      .setStyle(ButtonStyle.Secondary)
+                                      .setLabel('Home')
+                                      .setCustomId(
+                                          `add_topic_subcommand_button_home_${interaction.user.id}`,
+                                      ),
+                                  new ButtonBuilder()
+                                      .setStyle(ButtonStyle.Primary)
+                                      .setLabel('Next')
+                                      .setCustomId(
+                                          `add_topic_subcommand_button_next_${interaction.user.id}`,
+                                      )
+                                      .setDisabled(
+                                          state.addTopicPages.page ===
+                                              state.addTopicPages.pages.length - 1,
+                                      ),
+                              ),
+                          ]
+                        : []),
+                ),
+        ];
+
+        await interaction.reply({
+            components: addTopicComponents,
+            flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
         });
     },
     name: 'add_topic',

@@ -1,9 +1,11 @@
 import { ApplicationCommandOptionType } from '@antibot/interactions';
 import {
+    ActionRowBuilder,
+    ButtonBuilder,
     ButtonStyle,
     ChatInputCommandInteraction,
-    ComponentType,
     ContainerBuilder,
+    MessageActionRowComponentBuilder,
     MessageFlags,
     SectionBuilder,
     SeparatorBuilder,
@@ -35,39 +37,6 @@ export const ViewTopicsSubCommand = defineSubCommand({
                 flags: MessageFlags.Ephemeral,
             });
             return;
-        }
-
-        let components = [];
-
-        if (topicsExistInDB.length !== 0) {
-            components = [
-                {
-                    components: [
-                        {
-                            customId: `add_topic_subcommand_button_previous_${interaction.user.id}`,
-                            disabled: state.addTopicPages.page === 0,
-                            label: 'Previous',
-                            style: ButtonStyle.Primary as const,
-                            type: ComponentType.Button as const,
-                        },
-                        {
-                            customId: `add_topic_subcommand_button_home_${interaction.user.id}`,
-                            label: 'Home',
-                            style: ButtonStyle.Secondary as const,
-                            type: ComponentType.Button as const,
-                        },
-                        {
-                            customId: `add_topic_subcommand_button_next_${interaction.user.id}`,
-                            disabled:
-                                state.addTopicPages.page === state.addTopicPages.pages.length - 1,
-                            label: 'Next',
-                            style: ButtonStyle.Primary as const,
-                            type: ComponentType.Button as const,
-                        },
-                    ],
-                    type: ComponentType.ActionRow as const,
-                },
-            ];
         }
 
         const viewTopicsComponents = [
@@ -104,14 +73,45 @@ export const ViewTopicsSubCommand = defineSubCommand({
                     new TextDisplayBuilder().setContent(
                         `-# Page: ${state.addTopicPages.page + 1}/${state.addTopicPages.pages.length} • Total Topics: ${topicsExistInDB.length}`,
                     ),
+                )
+                .addSeparatorComponents(
+                    new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+                )
+                .addActionRowComponents(
+                    ...(topicsExistInDB.length > 10
+                        ? [
+                              new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+                                  new ButtonBuilder()
+                                      .setStyle(ButtonStyle.Primary)
+                                      .setLabel('Previous')
+                                      .setCustomId(
+                                          `add_topic_subcommand_button_previous_${interaction.user.id}`,
+                                      )
+                                      .setDisabled(state.addTopicPages.page === 0),
+                                  new ButtonBuilder()
+                                      .setStyle(ButtonStyle.Secondary)
+                                      .setLabel('Home')
+                                      .setCustomId(
+                                          `add_topic_subcommand_button_home_${interaction.user.id}`,
+                                      ),
+                                  new ButtonBuilder()
+                                      .setStyle(ButtonStyle.Primary)
+                                      .setLabel('Next')
+                                      .setCustomId(
+                                          `add_topic_subcommand_button_next_${interaction.user.id}`,
+                                      )
+                                      .setDisabled(
+                                          state.addTopicPages.page ===
+                                              state.addTopicPages.pages.length - 1,
+                                      ),
+                              ),
+                          ]
+                        : []),
                 ),
         ];
 
         await interaction.reply({
-            components:
-                components.length > 0
-                    ? [...viewTopicsComponents, ...components]
-                    : viewTopicsComponents,
+            components: viewTopicsComponents,
             flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2],
         });
     },

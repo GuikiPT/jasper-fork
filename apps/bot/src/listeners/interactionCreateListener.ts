@@ -2,6 +2,7 @@ import { PermissionsToHuman, PlantPermission } from '@antibot/interactions';
 /* eslint @typescript-eslint/no-explicit-any: "off" */
 import {
     ActionRowBuilder,
+    ButtonBuilder,
     ButtonInteraction,
     ButtonStyle,
     ChatInputCommandInteraction,
@@ -11,14 +12,17 @@ import {
     Interaction as InteractionEvent,
     MediaGalleryBuilder,
     MediaGalleryItemBuilder,
+    MessageActionRowComponentBuilder,
     MessageFlags,
     ModalBuilder,
     ModalSubmitInteraction,
+    SectionBuilder,
     SeparatorBuilder,
     SeparatorSpacingSize,
     TextDisplayBuilder,
     TextInputBuilder,
     TextInputStyle,
+    ThumbnailBuilder,
 } from 'discord.js';
 
 import { Context } from '../classes/context';
@@ -431,76 +435,101 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
     private async onAddTopicSubCommandButtons(interaction: ButtonInteraction): Promise<void> {
         if (!interaction.isButton()) return;
         const author = interaction.user.id;
-        const title = 'Current Topics in Configuration';
         if (!interaction.guild) return;
-        const thumbnail = { url: interaction.guild.iconURL() ?? '' };
-        const color = global.embedColor;
-        const description = '';
-        const footer = { text: '' };
 
         const currentUserState = this.ctx.pagination.get(author);
         if (!currentUserState) return;
 
-        const embedBase = {
-            color,
-            description,
-            footer,
-            thumbnail,
-            title,
-        };
+        const updateComponents = async () => {
+            const topicsExistInDB = await this.ctx.services.settings.getTopics<string>(
+                interaction.guild!.id,
+                'Topics',
+            );
 
-        const updateEmbed = async () => {
-            embedBase.description = currentUserState.addTopicPages.pages[
-                currentUserState.addTopicPages.page
-            ]
-                .map(
-                    (string, i) =>
-                        `**${currentUserState.addTopicPages.page * 10 + i + 1}.** *${string}*`,
-                )
-                .join('\n');
-
-            embedBase.footer.text = `Page: ${currentUserState.addTopicPages.page + 1}/${
-                currentUserState.addTopicPages.pages.length
-            } • Total Topics: ${
-                (
-                    await this.ctx.services.settings.getTopics<string>(
-                        interaction.guild!.id,
-                        'Topics',
+            const viewTopicsComponents = [
+                new ContainerBuilder()
+                    .setAccentColor(global.embedColor)
+                    .addSectionComponents(
+                        new SectionBuilder()
+                            .setThumbnailAccessory(
+                                new ThumbnailBuilder().setURL(interaction.guild?.iconURL()),
+                            )
+                            .addTextDisplayComponents(
+                                new TextDisplayBuilder().setContent(
+                                    '## Current Topics in Configuration',
+                                ),
+                            ),
                     )
-                ).length
-            }`;
-
-            const row = {
-                components: [
-                    {
-                        customId: `add_topic_subcommand_button_previous_${interaction.user.id}`,
-                        disabled: currentUserState.addTopicPages.page === 0,
-                        label: 'Previous',
-                        style: ButtonStyle.Primary,
-                        type: ComponentType.Button,
-                    } as const,
-                    {
-                        customId: `add_topic_subcommand_button_home_${interaction.user.id}`,
-                        label: 'Home',
-                        style: ButtonStyle.Secondary,
-                        type: ComponentType.Button,
-                    } as const,
-                    {
-                        customId: `add_topic_subcommand_button_next_${interaction.user.id}`,
-                        disabled:
-                            currentUserState.addTopicPages.page ===
-                            currentUserState.addTopicPages.pages.length - 1,
-                        label: 'Next',
-                        style: ButtonStyle.Primary,
-                        type: ComponentType.Button,
-                    } as const,
-                ],
-                type: ComponentType.ActionRow,
-            } as const;
+                    .addSeparatorComponents(
+                        new SeparatorBuilder()
+                            .setSpacing(SeparatorSpacingSize.Small)
+                            .setDivider(true),
+                    )
+                    .addTextDisplayComponents(
+                        new TextDisplayBuilder().setContent(
+                            (
+                                currentUserState.addTopicPages.pages[
+                                    currentUserState.addTopicPages.page
+                                ] || []
+                            )
+                                .map(
+                                    (string, i) =>
+                                        `**${currentUserState.addTopicPages.page * 10 + i + 1}.** *${string}*`,
+                                )
+                                .join('\n') || 'There are no topics configured.',
+                        ),
+                    )
+                    .addSeparatorComponents(
+                        new SeparatorBuilder()
+                            .setSpacing(SeparatorSpacingSize.Small)
+                            .setDivider(true),
+                    )
+                    .addTextDisplayComponents(
+                        new TextDisplayBuilder().setContent(
+                            `-# Page: ${currentUserState.addTopicPages.page + 1}/${currentUserState.addTopicPages.pages.length} • Total Topics: ${topicsExistInDB.length}`,
+                        ),
+                    )
+                    .addSeparatorComponents(
+                        new SeparatorBuilder()
+                            .setSpacing(SeparatorSpacingSize.Small)
+                            .setDivider(true),
+                    )
+                    .addActionRowComponents(
+                        ...(topicsExistInDB.length > 10
+                            ? [
+                                  new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+                                      new ButtonBuilder()
+                                          .setStyle(ButtonStyle.Primary)
+                                          .setLabel('Previous')
+                                          .setCustomId(
+                                              `add_topic_subcommand_button_previous_${interaction.user.id}`,
+                                          )
+                                          .setDisabled(currentUserState.addTopicPages.page === 0),
+                                      new ButtonBuilder()
+                                          .setStyle(ButtonStyle.Secondary)
+                                          .setLabel('Home')
+                                          .setCustomId(
+                                              `add_topic_subcommand_button_home_${interaction.user.id}`,
+                                          ),
+                                      new ButtonBuilder()
+                                          .setStyle(ButtonStyle.Primary)
+                                          .setLabel('Next')
+                                          .setCustomId(
+                                              `add_topic_subcommand_button_next_${interaction.user.id}`,
+                                          )
+                                          .setDisabled(
+                                              currentUserState.addTopicPages.page ===
+                                                  currentUserState.addTopicPages.pages.length - 1,
+                                          ),
+                                  ),
+                              ]
+                            : []),
+                    ),
+            ];
 
             await interaction.update({
-                components: [row],
-                embeds: [embedBase],
+                components: viewTopicsComponents,
+                flags: [MessageFlags.IsComponentsV2],
             });
         };
 
@@ -528,7 +557,7 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
         }
 
         this.ctx.pagination.set(author, currentUserState);
-        await updateEmbed();
+        await updateComponents();
     }
 
     private async onCloseThreadButton(interaction: ButtonInteraction): Promise<void> {
