@@ -56,9 +56,9 @@ class SettingsService extends Service {
         this.guildId = '';
         this.guildSettings = {
             Channels: {
-                AllowedSnipeChannels: [],
-                AllowedTagChannels: [],
-                AutomaticSlowmodeChannels: [],
+                allowedSnipeChannels: [],
+                allowedTagChannels: [],
+                automaticSlowmodeChannels: [],
             },
             InactiveThreads: {
                 graceTime: 1440,
@@ -66,21 +66,21 @@ class SettingsService extends Service {
                 warningTime: 2880,
             },
             Roles: {
-                AllowedAdminRoles: [],
-                AllowedStaffRoles: [],
-                AllowedTagAdminRoles: [],
-                AllowedTagRoles: [],
-                IgnoredSnipedRoles: [],
-                SupportRoles: [],
+                allowedAdminRoles: [],
+                allowedStaffRoles: [],
+                allowedTagAdminRoles: [],
+                allowedTagRoles: [],
+                ignoredSnipedRoles: [],
+                supportRoles: [],
             },
             Skullboard: {
-                SkullboardBoolean: false,
-                SkullboardChannel: null,
-                SkullboardEmoji: '💀',
-                SkullboardReactionThreshold: 4,
+                skullboardBoolean: false,
+                skullboardChannel: null,
+                skullboardEmoji: '💀',
+                skullboardReactionThreshold: 4,
             },
             Text: { Actions: [], Objects: [], Topics: [] },
-            Users: { IgnoreSnipedUsers: [] },
+            Users: { ignoreSnipedUsers: [] },
         };
     }
 
@@ -96,9 +96,9 @@ class SettingsService extends Service {
 
         this.guildSettings = {
             Channels: {
-                AllowedSnipeChannels: Channels.AllowedSnipeChannels,
-                AllowedTagChannels: Channels.AllowedTagChannels,
-                AutomaticSlowmodeChannels: Channels.AutomaticSlowmodeChannels,
+                allowedSnipeChannels: Channels.allowedSnipeChannels,
+                allowedTagChannels: Channels.allowedTagChannels,
+                automaticSlowmodeChannels: Channels.automaticSlowmodeChannels,
             },
             InactiveThreads: {
                 graceTime: InactiveThreads.graceTime,
@@ -106,21 +106,21 @@ class SettingsService extends Service {
                 warningTime: InactiveThreads.warningTime,
             },
             Roles: {
-                AllowedAdminRoles: Roles.AllowedAdminRoles,
-                AllowedStaffRoles: Roles.AllowedStaffRoles,
-                AllowedTagAdminRoles: Roles.AllowedTagAdminRoles,
-                AllowedTagRoles: Roles.AllowedTagRoles,
-                IgnoredSnipedRoles: Roles.IgnoredSnipedRoles,
-                SupportRoles: Roles.SupportRoles,
+                allowedAdminRoles: Roles.allowedAdminRoles,
+                allowedStaffRoles: Roles.allowedStaffRoles,
+                allowedTagAdminRoles: Roles.allowedTagAdminRoles,
+                allowedTagRoles: Roles.allowedTagRoles,
+                ignoredSnipedRoles: Roles.ignoredSnipedRoles,
+                supportRoles: Roles.supportRoles,
             },
             Skullboard: {
-                SkullboardBoolean: Skullboard.SkullboardBoolean,
-                SkullboardChannel: Skullboard.SkullboardChannel,
-                SkullboardEmoji: Skullboard.SkullboardEmoji ?? '💀',
-                SkullboardReactionThreshold: Skullboard.SkullboardReactionThreshold,
+                skullboardBoolean: Skullboard.skullboardBoolean,
+                skullboardChannel: Skullboard.skullboardChannel,
+                skullboardEmoji: Skullboard.skullboardEmoji ?? '💀',
+                skullboardReactionThreshold: Skullboard.skullboardReactionThreshold,
             },
             Text: { Actions: Text.Actions, Objects: Text.Objects, Topics: Text.Topics },
-            Users: { IgnoreSnipedUsers: Users.IgnoreSnipedUsers },
+            Users: { ignoreSnipedUsers: Users.ignoreSnipedUsers },
         };
 
         return this;
@@ -220,9 +220,9 @@ class SettingsService extends Service {
         const guildId = this.validateGuildId(options?.guildId, 'remove skullboard');
         const guild = await getGuild<GuildDocument>(this.ctx, guildId);
 
-        guild.GuildSettings.Skullboard.SkullboardChannel = null;
-        guild.GuildSettings.Skullboard.SkullboardEmoji = '💀';
-        guild.GuildSettings.Skullboard.SkullboardReactionThreshold = 4;
+        guild.GuildSettings.Skullboard.skullboardChannel = null;
+        guild.GuildSettings.Skullboard.skullboardEmoji = '💀';
+        guild.GuildSettings.Skullboard.skullboardReactionThreshold = 4;
 
         await this.ctx.store.setForeignKey({ guild: guildId }, guild);
         await GuildSchema.updateOne(
@@ -250,7 +250,7 @@ class SettingsService extends Service {
         options: T extends SetUsersOptions ? SetUsersOptions : null,
     ): Promise<CommonCondition<Snowflake[]>> {
         const guildId = this.validateGuildId(options?.guildId, 'remove users');
-        return this.removeFromSettings('Users', 'IgnoreSnipedUsers', guildId, options?.users ?? []);
+        return this.removeFromSettings('Users', 'ignoreSnipedUsers', guildId, options?.users ?? []);
     }
 
     public async setChannels<T>(
@@ -308,13 +308,13 @@ class SettingsService extends Service {
         const guild = await getGuild<GuildDocument>(this.ctx, guildId);
 
         if (options?.channel !== undefined) {
-            guild.GuildSettings.Skullboard.SkullboardChannel = options.channel;
+            guild.GuildSettings.Skullboard.skullboardChannel = options.channel;
         }
         if (options?.emoji !== undefined) {
-            guild.GuildSettings.Skullboard.SkullboardEmoji = options.emoji;
+            guild.GuildSettings.Skullboard.skullboardEmoji = options.emoji;
         }
         if (options?.threshold !== undefined) {
-            guild.GuildSettings.Skullboard.SkullboardReactionThreshold = options.threshold;
+            guild.GuildSettings.Skullboard.skullboardReactionThreshold = options.threshold;
         }
 
         await this.ctx.store.setForeignKey({ guild: guildId }, guild);
@@ -343,7 +343,7 @@ class SettingsService extends Service {
         options: T extends SetUsersOptions ? SetUsersOptions : null,
     ): Promise<CommonCondition<Snowflake[]>> {
         const guildId = this.validateGuildId(options?.guildId, 'set users');
-        return this.updateSettings('Users', 'IgnoreSnipedUsers', guildId, options?.users ?? []);
+        return this.updateSettings('Users', 'ignoreSnipedUsers', guildId, options?.users ?? []);
     }
 
     private async getFromSettings<T extends keyof Settings, K extends keyof Settings[T]>(

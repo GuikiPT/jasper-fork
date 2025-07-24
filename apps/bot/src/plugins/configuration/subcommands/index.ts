@@ -3,7 +3,7 @@ import { commandOptions as addChannelOptions, AddChannelSubCommand } from './add
 import { commandOptions as addObjectOptions, AddObjectSubCommand } from './addObjectSubCommand';
 import { commandOptions as addRoleOptions, AddRoleSubCommand } from './addRoleSubCommand';
 import {
-    commandOptions as addSkullboardChannelOptions,
+    commandOptions as addskullboardChannelOptions,
     AddSkullboardChannelSubCommand,
 } from './addSkullboardChannelSubCommand';
 import { commandOptions as addTopicOptions, AddTopicSubCommand } from './addTopicSubCommand';
@@ -27,11 +27,11 @@ import {
 } from './removeTopicSubCommand';
 import { commandOptions as removeUserOptions, RemoveUserSubCommand } from './removeUserSubCommand';
 import {
-    commandOptions as setSkullboardEmojiOptions,
+    commandOptions as setskullboardEmojiOptions,
     SetSkullboardEmojiSubCommand,
 } from './setSkullboardEmoji';
 import {
-    commandOptions as setSkullboardReactionThresholdOptions,
+    commandOptions as setskullboardReactionThresholdOptions,
     SetSkullboardReactionThresholdSubCommand,
 } from './setSkullboardReactionThreshold';
 import { commandOptions as viewActionOptions, ViewActionSubCommand } from './viewActionsSubCommand';
@@ -54,9 +54,9 @@ export const subCommandOptions = [
     viewActionOptions,
     addUserOptions,
     removeUserOptions,
-    addSkullboardChannelOptions,
-    setSkullboardEmojiOptions,
-    setSkullboardReactionThresholdOptions,
+    addskullboardChannelOptions,
+    setskullboardEmojiOptions,
+    setskullboardReactionThresholdOptions,
 ];
 
 export {

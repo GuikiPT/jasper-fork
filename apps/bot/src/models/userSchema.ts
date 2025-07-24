@@ -8,8 +8,8 @@ export default model<UserDocument>(
         {
             _id: String,
             Incognito: {
-                ShowCommandAuthor: { default: false, type: Boolean },
-                ShowCommands: { default: false, type: Boolean },
+                showCommandAuthor: { default: false, type: Boolean },
+                showCommands: { default: false, type: Boolean },
             },
         },
         { timestamps: true, versionKey: false },

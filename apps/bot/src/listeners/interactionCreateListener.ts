@@ -32,7 +32,7 @@ import {
     InactiveThread,
     Options as InactiveThreadOptions,
 } from '../services/inactiveThreadsService';
-import { Options, Tag, TagResponse } from '../services/tagService';
+import { Options, Tag, tagResponse } from '../services/tagService';
 
 import { Listener } from './listener';
 
@@ -206,7 +206,7 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
                     guildId: interaction.guild.id,
                 });
                 const { Channels } = this.ctx.services.settings.getSettings();
-                const allowedTagChannels = Channels.AllowedTagChannels;
+                const allowedTagChannels = Channels.allowedTagChannels;
 
                 if (!allowedTagChannels.includes(interaction.channel.parentId)) {
                     await interaction.reply({
@@ -407,8 +407,8 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
 
                 await this.ctx.services.tags.modify<Options & { tag: Tag }, void>();
 
-                const { TagEmbedDescription, TagEmbedFooter, TagEmbedImageURL, TagEmbedTitle } =
-                    await this.ctx.services.tags.getValues<Options, TagResponse>({
+                const { tagEmbedDescription, tagEmbedFooter, tagEmbedImageURL, tagEmbedTitle } =
+                    await this.ctx.services.tags.getValues<Options, tagResponse>({
                         guildId,
                         name,
                     });
@@ -420,7 +420,7 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
                 const container = new ContainerBuilder()
                     .setAccentColor(global.embedColor)
                     .addTextDisplayComponents(
-                        new TextDisplayBuilder().setContent(`### ${TagEmbedTitle}`),
+                        new TextDisplayBuilder().setContent(`### ${tagEmbedTitle}`),
                     )
                     .addSeparatorComponents(
                         new SeparatorBuilder()
@@ -428,13 +428,13 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
                             .setDivider(true),
                     )
                     .addTextDisplayComponents(
-                        new TextDisplayBuilder().setContent(`${TagEmbedDescription}`),
+                        new TextDisplayBuilder().setContent(`${tagEmbedDescription}`),
                     );
 
                 if (image_url) {
                     container.addMediaGalleryComponents(
                         new MediaGalleryBuilder().addItems(
-                            new MediaGalleryItemBuilder().setURL(`${TagEmbedImageURL}`),
+                            new MediaGalleryItemBuilder().setURL(`${tagEmbedImageURL}`),
                         ),
                     );
                 }
@@ -445,7 +445,7 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
                             .setDivider(true),
                     ),
                         container.addTextDisplayComponents(
-                            new TextDisplayBuilder().setContent(`-# ${TagEmbedFooter}`),
+                            new TextDisplayBuilder().setContent(`-# ${tagEmbedFooter}`),
                         );
                 }
 
@@ -584,7 +584,7 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
                 guildId: interaction.guild.id,
             });
             const { Channels } = this.ctx.services.settings.getSettings();
-            const allowedTagChannels = Channels.AllowedTagChannels;
+            const allowedTagChannels = Channels.allowedTagChannels;
 
             if (!allowedTagChannels.includes(interaction.channel.parentId)) {
                 await interaction.reply({
@@ -653,7 +653,7 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
                 guildId: interaction.guild.id,
             });
             const { Channels } = this.ctx.services.settings.getSettings();
-            const allowedTagChannels = Channels.AllowedTagChannels;
+            const allowedTagChannels = Channels.allowedTagChannels;
 
             if (!allowedTagChannels.includes(interaction.channel.parentId)) {
                 await interaction.reply({
@@ -720,8 +720,8 @@ export default class InteractionCreateListener extends Listener<'interactionCrea
             embedBase.description = currentUserState.tagPages[currentUserState.page]
                 .map(
                     (e, i) =>
-                        `> **${currentUserState.page * 10 + i + 1}.** \`${e.TagName}\` **•** ${
-                            e.TagAuthor ? `<@${e.TagAuthor}>` : 'None'
+                        `> **${currentUserState.page * 10 + i + 1}.** \`${e.tagName}\` **•** ${
+                            e.tagAuthor ? `<@${e.tagAuthor}>` : 'None'
                         }`,
                 )
                 .join('\n');

@@ -13,18 +13,18 @@ import {
 import { Context } from '../../../classes/context';
 import { ConfigurationChannels, ConfigurationRoles } from '../../../container';
 import { defineSubCommand } from '../../../define';
-import { Options, TagResponse } from '../../../services/tagService';
+import { Options, tagResponse } from '../../../services/tagService';
 
 export const ShowSubCommand = defineSubCommand({
     autocomplete: async (ctx: Context, interaction) => {
         const guildId = interaction.guildId!;
         const name = interaction.options.getString('tag-name') || '';
 
-        const tags = await ctx.services.tags.getMultiValues<string, TagResponse[]>(guildId);
+        const tags = await ctx.services.tags.getMultiValues<string, tagResponse[]>(guildId);
         const filtered = tags
-            .filter((tag) => tag.TagName.toLowerCase().includes(name.toLowerCase()))
+            .filter((tag) => tag.tagName.toLowerCase().includes(name.toLowerCase()))
             .slice(0, 25)
-            .map((tag) => ({ name: tag.TagName, value: tag.TagName }));
+            .map((tag) => ({ name: tag.tagName, value: tag.tagName }));
 
         await interaction.respond(filtered);
     },
@@ -35,7 +35,7 @@ export const ShowSubCommand = defineSubCommand({
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         ctx.services.tags.configure<Options>({ guildId, name });
-        const tag = await ctx.services.tags.getValues<Options, TagResponse>();
+        const tag = await ctx.services.tags.getValues<Options, tagResponse>();
 
         if (!tag) {
             await interaction.editReply('Tag not found.');
@@ -45,28 +45,28 @@ export const ShowSubCommand = defineSubCommand({
         const container = new ContainerBuilder()
             .setAccentColor(global.embedColor)
             .addTextDisplayComponents(
-                new TextDisplayBuilder().setContent(`### ${tag.TagEmbedTitle}`),
+                new TextDisplayBuilder().setContent(`### ${tag.tagEmbedTitle}`),
             )
             .addSeparatorComponents(
                 new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Large).setDivider(true),
             )
             .addTextDisplayComponents(
-                new TextDisplayBuilder().setContent(`${tag.TagEmbedDescription}`),
+                new TextDisplayBuilder().setContent(`${tag.tagEmbedDescription}`),
             );
 
-        if (tag.TagEmbedImageURL) {
+        if (tag.tagEmbedImageURL) {
             container.addMediaGalleryComponents(
                 new MediaGalleryBuilder().addItems(
-                    new MediaGalleryItemBuilder().setURL(`${tag.TagEmbedImageURL}`),
+                    new MediaGalleryItemBuilder().setURL(`${tag.tagEmbedImageURL}`),
                 ),
             );
         }
-        if (tag.TagEmbedFooter) {
+        if (tag.tagEmbedFooter) {
             container.addSeparatorComponents(
                 new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
             ),
                 container.addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent(`-# ${tag.TagEmbedFooter}`),
+                    new TextDisplayBuilder().setContent(`-# ${tag.tagEmbedFooter}`),
                 );
         }
 
@@ -76,9 +76,9 @@ export const ShowSubCommand = defineSubCommand({
         });
     },
     name: 'show',
-    restrictToConfigChannels: [ConfigurationChannels.AllowedTagChannels],
+    restrictToConfigChannels: [ConfigurationChannels.allowedTagChannels],
     restrictToConfigRoles: [
-        ConfigurationRoles.SupportRoles,
+        ConfigurationRoles.supportRoles,
         ConfigurationRoles.StaffRoles,
         ConfigurationRoles.AdminRoles,
         ConfigurationRoles.TagAdminRoles,

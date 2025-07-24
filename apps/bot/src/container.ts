@@ -1,39 +1,39 @@
 export enum ConfigurationChannels {
-    AllowedTagChannels,
-    AllowedSnipeChannels,
-    AutomaticSlowmodeChannels,
+    allowedTagChannels,
+    allowedSnipeChannels,
+    automaticSlowmodeChannels,
 }
 
 export enum ConfigurationRoles {
-    SupportRoles,
+    supportRoles,
     TagRoles,
     TagAdminRoles,
     AdminRoles,
     StaffRoles,
-    IgnoredSnipedRoles,
+    ignoredSnipedRoles,
 }
 
 export enum ConfigurationUsers {
-    IgnoreSnipedUsers,
+    ignoreSnipedUsers,
 }
 
 export const configurationRolesContainer = [
-    [ConfigurationRoles.AdminRoles, 'AllowedAdminRoles'],
-    [ConfigurationRoles.StaffRoles, 'AllowedStaffRoles'],
-    [ConfigurationRoles.SupportRoles, 'SupportRoles'],
-    [ConfigurationRoles.TagRoles, 'AllowedTagRoles'],
-    [ConfigurationRoles.TagAdminRoles, 'AllowedTagAdminRoles'],
-    [ConfigurationRoles.IgnoredSnipedRoles, 'IgnoredSnipedRoles'],
+    [ConfigurationRoles.AdminRoles, 'allowedAdminRoles'],
+    [ConfigurationRoles.StaffRoles, 'allowedStaffRoles'],
+    [ConfigurationRoles.supportRoles, 'supportRoles'],
+    [ConfigurationRoles.TagRoles, 'allowedTagRoles'],
+    [ConfigurationRoles.TagAdminRoles, 'allowedTagAdminRoles'],
+    [ConfigurationRoles.ignoredSnipedRoles, 'ignoredSnipedRoles'],
 ] as const;
 
 export const configurationChannelsContainer = [
-    [ConfigurationChannels.AllowedTagChannels, 'AllowedTagChannels'],
-    [ConfigurationChannels.AllowedSnipeChannels, 'AllowedSnipeChannels'],
-    [ConfigurationChannels.AutomaticSlowmodeChannels, 'AutomaticSlowmodeChannels'],
+    [ConfigurationChannels.allowedTagChannels, 'allowedTagChannels'],
+    [ConfigurationChannels.allowedSnipeChannels, 'allowedSnipeChannels'],
+    [ConfigurationChannels.automaticSlowmodeChannels, 'automaticSlowmodeChannels'],
 ] as const;
 
 export const configurationUsersContainer = [
-    [ConfigurationUsers.IgnoreSnipedUsers, 'IgnoreSnipedUsers'],
+    [ConfigurationUsers.ignoreSnipedUsers, 'ignoreSnipedUsers'],
 ] as const;
 
 export function filterContainer<R extends []>(

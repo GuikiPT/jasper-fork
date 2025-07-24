@@ -22,14 +22,14 @@ export type Tag = {
     title: string;
 };
 
-export type TagResponse = {
-    TagAuthor: Snowflake;
-    TagEditedBy: Nullable<Snowflake>;
-    TagEmbedDescription: Nullable<string>;
-    TagEmbedFooter: Nullable<string>;
-    TagEmbedImageURL: Nullable<string>;
-    TagEmbedTitle: Nullable<string>;
-    TagName: string;
+export type tagResponse = {
+    tagAuthor: Snowflake;
+    tagEditedBy: Nullable<Snowflake>;
+    tagEmbedDescription: Nullable<string>;
+    tagEmbedFooter: Nullable<string>;
+    tagEmbedImageURL: Nullable<string>;
+    tagEmbedTitle: Nullable<string>;
+    tagName: string;
 };
 
 class TagService extends Service {
@@ -103,19 +103,19 @@ class TagService extends Service {
             throw new Error('Tag title is required');
         }
 
-        const TagName = name.trim();
-        const TagAuthor = tag.author;
-        const TagEditedBy = tag.editedBy;
-        const TagEmbedTitle = tag.title;
-        const TagEmbedDescription = tag.description ?? null;
-        const TagEmbedImageURL = tag.image_url ?? null;
-        const TagEmbedFooter = tag.footer ?? null;
+        const tagName = name.trim();
+        const tagAuthor = tag.author;
+        const tagEditedBy = tag.editedBy;
+        const tagEmbedTitle = tag.title;
+        const tagEmbedDescription = tag.description ?? null;
+        const tagEmbedImageURL = tag.image_url ?? null;
+        const tagEmbedFooter = tag.footer ?? null;
 
         guild.Tags.push({
-            TagAuthor,
-            TagEditedBy,
-            TagName,
-            TagResponse: { TagEmbedDescription, TagEmbedFooter, TagEmbedImageURL, TagEmbedTitle },
+            tagAuthor,
+            tagEditedBy,
+            tagName,
+            tagResponse: { tagEmbedDescription, tagEmbedFooter, tagEmbedImageURL, tagEmbedTitle },
         });
         await this.ctx.store.setForeignKey({ guild: guildId }, guild);
 
@@ -124,14 +124,14 @@ class TagService extends Service {
             {
                 $push: {
                     Tags: {
-                        TagAuthor,
-                        TagEditedBy,
-                        TagName,
-                        TagResponse: {
-                            TagEmbedDescription,
-                            TagEmbedFooter,
-                            TagEmbedImageURL,
-                            TagEmbedTitle,
+                        tagAuthor,
+                        tagEditedBy,
+                        tagName,
+                        tagResponse: {
+                            tagEmbedDescription,
+                            tagEmbedFooter,
+                            tagEmbedImageURL,
+                            tagEmbedTitle,
                         },
                     },
                 },
@@ -165,7 +165,7 @@ class TagService extends Service {
             return <CommonCondition<R>>false;
         }
 
-        const index = guild.Tags.findIndex((tag) => tag.TagName === name);
+        const index = guild.Tags.findIndex((tag) => tag.tagName === name);
         if (index === -1) {
             return <CommonCondition<R>>false;
         }
@@ -173,14 +173,14 @@ class TagService extends Service {
         guild.Tags.splice(index, 1);
         await this.ctx.store.setForeignKey({ guild: guildId }, guild);
 
-        await TagSchema.updateOne({ _id: guildId }, { $pull: { Tags: { TagName: name } } });
+        await TagSchema.updateOne({ _id: guildId }, { $pull: { Tags: { tagName: name } } });
 
         return <CommonCondition<R>>true;
     }
 
     public async getMultiValues<T, R>(
         getMultiValues?: T extends Snowflake ? Snowflake : null,
-    ): Promise<CommonCondition<R extends TagResponse[] ? TagResponse[] : null>> {
+    ): Promise<CommonCondition<R extends tagResponse[] ? tagResponse[] : null>> {
         let guildId = this.guildId;
 
         if (!this.#checkConfig() && getMultiValues) {
@@ -195,23 +195,23 @@ class TagService extends Service {
         const tags = guild.Tags;
 
         if (!tags?.length) {
-            return <CommonCondition<R extends TagResponse[] ? TagResponse[] : null>>[];
+            return <CommonCondition<R extends tagResponse[] ? tagResponse[] : null>>[];
         }
 
-        return <CommonCondition<R extends TagResponse[] ? TagResponse[] : null>>tags.map((tag) => ({
-            TagAuthor: tag.TagAuthor,
-            TagEditedBy: tag.TagEditedBy,
-            TagEmbedDescription: tag.TagResponse.TagEmbedDescription,
-            TagEmbedFooter: tag.TagResponse.TagEmbedFooter,
-            TagEmbedImageURL: tag.TagResponse.TagEmbedImageURL,
-            TagEmbedTitle: tag.TagResponse.TagEmbedTitle,
-            TagName: tag.TagName,
+        return <CommonCondition<R extends tagResponse[] ? tagResponse[] : null>>tags.map((tag) => ({
+            tagAuthor: tag.tagAuthor,
+            tagEditedBy: tag.tagEditedBy,
+            tagEmbedDescription: tag.tagResponse.tagEmbedDescription,
+            tagEmbedFooter: tag.tagResponse.tagEmbedFooter,
+            tagEmbedImageURL: tag.tagResponse.tagEmbedImageURL,
+            tagEmbedTitle: tag.tagResponse.tagEmbedTitle,
+            tagName: tag.tagName,
         }));
     }
 
     public async getValues<T, R>(
         get?: T extends Options ? Options : null,
-    ): Promise<CommonCondition<R extends TagResponse ? TagResponse : null>> {
+    ): Promise<CommonCondition<R extends tagResponse ? tagResponse : null>> {
         let guildId = this.guildId;
         let name = this.name;
 
@@ -229,24 +229,24 @@ class TagService extends Service {
         }
 
         const guild = await getGuild<GuildDocument>(this.ctx, guildId);
-        const tag = guild.Tags.find((tag) => tag.TagName === name);
+        const tag = guild.Tags.find((tag) => tag.tagName === name);
 
         if (!tag) {
             return null;
         }
 
-        const { TagAuthor, TagName, TagResponse } = tag;
-        const { TagEmbedDescription, TagEmbedFooter, TagEmbedImageURL, TagEmbedTitle } =
-            TagResponse;
+        const { tagAuthor, tagName, tagResponse } = tag;
+        const { tagEmbedDescription, tagEmbedFooter, tagEmbedImageURL, tagEmbedTitle } =
+            tagResponse;
 
-        return <CommonCondition<R extends TagResponse ? TagResponse : null>>{
-            TagAuthor,
-            TagEditedBy: tag.TagEditedBy,
-            TagEmbedDescription,
-            TagEmbedFooter,
-            TagEmbedImageURL,
-            TagEmbedTitle,
-            TagName,
+        return <CommonCondition<R extends tagResponse ? tagResponse : null>>{
+            tagAuthor,
+            tagEditedBy: tag.tagEditedBy,
+            tagEmbedDescription,
+            tagEmbedFooter,
+            tagEmbedImageURL,
+            tagEmbedTitle,
+            tagName,
         };
     }
 
@@ -264,7 +264,7 @@ class TagService extends Service {
         const guild = await getGuild<GuildDocument>(this.ctx, guildId);
         const tags = guild.Tags;
 
-        if (tags.find((tag) => tag.TagName === name)) return true;
+        if (tags.find((tag) => tag.tagName === name)) return true;
 
         return false;
     }
@@ -295,33 +295,33 @@ class TagService extends Service {
         }
 
         const guild = await getGuild<GuildDocument>(this.ctx, guildId);
-        const tagInDb = guild.Tags.find((tag) => tag.TagName === name);
+        const tagInDb = guild.Tags.find((tag) => tag.tagName === name);
 
         if (!tagInDb) {
             throw new Error(`Tag "${name}" not found in guild ${guildId}`);
         }
 
-        const index = guild.Tags.findIndex((tag) => tag.TagName === name);
+        const index = guild.Tags.findIndex((tag) => tag.tagName === name);
 
-        const updatedTagResponse = {
-            TagEmbedDescription:
+        const updatedtagResponse = {
+            tagEmbedDescription:
                 typeof tag.description === 'string'
                     ? tag.description
-                    : tagInDb.TagResponse.TagEmbedDescription,
-            TagEmbedFooter:
-                typeof tag.footer === 'string' ? tag.footer : tagInDb.TagResponse.TagEmbedFooter,
-            TagEmbedImageURL:
+                    : tagInDb.tagResponse.tagEmbedDescription,
+            tagEmbedFooter:
+                typeof tag.footer === 'string' ? tag.footer : tagInDb.tagResponse.tagEmbedFooter,
+            tagEmbedImageURL:
                 typeof tag.image_url === 'string'
                     ? tag.image_url
-                    : tagInDb.TagResponse.TagEmbedImageURL,
-            TagEmbedTitle: tag.title || tagInDb.TagResponse.TagEmbedTitle,
+                    : tagInDb.tagResponse.tagEmbedImageURL,
+            tagEmbedTitle: tag.title || tagInDb.tagResponse.tagEmbedTitle,
         };
 
         const updatedTag = {
-            TagAuthor: tagInDb.TagAuthor,
-            TagEditedBy: tag.editedBy ?? tagInDb.TagEditedBy,
-            TagName: name,
-            TagResponse: updatedTagResponse,
+            tagAuthor: tagInDb.tagAuthor,
+            tagEditedBy: tag.editedBy ?? tagInDb.tagEditedBy,
+            tagName: name,
+            tagResponse: updatedtagResponse,
         };
 
         guild.Tags[index] = updatedTag;
@@ -330,12 +330,12 @@ class TagService extends Service {
         await TagSchema.updateOne(
             {
                 _id: guildId,
-                'Tags.TagName': name,
+                'Tags.tagName': name,
             },
             {
                 $set: {
-                    'Tags.$.TagEditedBy': updatedTag.TagEditedBy,
-                    'Tags.$.TagResponse': updatedTagResponse,
+                    'Tags.$.tagEditedBy': updatedTag.tagEditedBy,
+                    'Tags.$.tagResponse': updatedtagResponse,
                 },
             },
         );

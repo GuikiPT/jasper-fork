@@ -47,7 +47,7 @@ export default class MessageCreateListener extends Listener<'messageCreate'> {
             });
             const { Channels } = this.ctx.services.settings.getSettings();
 
-            if (Channels.AutomaticSlowmodeChannels?.includes(message.channel.id)) {
+            if (Channels.automaticSlowmodeChannels?.includes(message.channel.id)) {
                 if (this.ctx.env.get('slowmode') == '0') return;
 
                 const channel = this.ctx.channels.resolve(message.channel.id) as TextChannel;
@@ -112,7 +112,7 @@ export default class MessageCreateListener extends Listener<'messageCreate'> {
                 guildId: message.guild.id,
             });
             const { Channels } = this.ctx.services.settings.getSettings();
-            const allowedTagChannels = Channels?.AllowedTagChannels;
+            const allowedTagChannels = Channels?.allowedTagChannels;
 
             if (!allowedTagChannels.includes(message.channel.parentId)) return;
             const guildId = message.guild.id;

@@ -38,11 +38,11 @@ export default class MessageReactionAddListener extends Listener<'messageReactio
             const { Skullboard } = this.ctx.services.settings.getSettings();
 
             if (
-                reaction.emoji.name === Skullboard.SkullboardEmoji &&
-                reaction.count >= Skullboard.SkullboardReactionThreshold
+                reaction.emoji.name === Skullboard.skullboardEmoji &&
+                reaction.count >= Skullboard.skullboardReactionThreshold
             ) {
                 const skullboardChannel = this.ctx.channels.resolve(
-                    Skullboard.SkullboardChannel,
+                    Skullboard.skullboardChannel,
                 ) as TextChannel;
                 const fetchedChannel = await this.ctx.channels.fetch(reaction.message.channel.id);
 

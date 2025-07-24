@@ -6,14 +6,14 @@ import { Context } from '../../../classes/context';
 import { ConfigurationChannels, ConfigurationRoles } from '../../../container';
 import { defineSubCommand } from '../../../define';
 import { Tag } from '../../../models/guildSchema';
-import { TagResponse } from '../../../services/tagService';
+import { tagResponse } from '../../../services/tagService';
 import { State } from '../../types';
 
 export const ListSubCommand = defineSubCommand({
     handler: async (ctx: Context, interaction: ChatInputCommandInteraction) => {
         const guildId = interaction.guildId!;
 
-        const tagsResponse = await ctx.services.tags.getMultiValues<Snowflake, TagResponse[]>(
+        const tagsResponse = await ctx.services.tags.getMultiValues<Snowflake, tagResponse[]>(
             guildId,
         );
 
@@ -26,14 +26,14 @@ export const ListSubCommand = defineSubCommand({
         }
 
         const tags: Tag[] = tagsResponse.map((t) => ({
-            TagAuthor: t.TagAuthor,
-            TagEditedBy: t.TagEditedBy,
-            TagName: t.TagName,
-            TagResponse: {
-                TagEmbedDescription: t.TagEmbedDescription,
-                TagEmbedFooter: t.TagEmbedFooter,
-                TagEmbedImageURL: t.TagEmbedImageURL,
-                TagEmbedTitle: t.TagEmbedTitle,
+            tagAuthor: t.tagAuthor,
+            tagEditedBy: t.tagEditedBy,
+            tagName: t.tagName,
+            tagResponse: {
+                tagEmbedDescription: t.tagEmbedDescription,
+                tagEmbedFooter: t.tagEmbedFooter,
+                tagEmbedImageURL: t.tagEmbedImageURL,
+                tagEmbedTitle: t.tagEmbedTitle,
             },
         }));
 
@@ -85,8 +85,8 @@ export const ListSubCommand = defineSubCommand({
                     description: state.tagPages[state.page]
                         .map(
                             (e, i) =>
-                                `> **${state.page * 10 + i + 1}.** \`${e.TagName}\` **•** ${
-                                    e.TagAuthor ? `<@${e.TagAuthor}>` : 'None'
+                                `> **${state.page * 10 + i + 1}.** \`${e.tagName}\` **•** ${
+                                    e.tagAuthor ? `<@${e.tagAuthor}>` : 'None'
                                 }`,
                         )
                         .join('\n'),
@@ -101,9 +101,9 @@ export const ListSubCommand = defineSubCommand({
         });
     },
     name: 'list',
-    restrictToConfigChannels: [ConfigurationChannels.AllowedTagChannels],
+    restrictToConfigChannels: [ConfigurationChannels.allowedTagChannels],
     restrictToConfigRoles: [
-        ConfigurationRoles.SupportRoles,
+        ConfigurationRoles.supportRoles,
         ConfigurationRoles.StaffRoles,
         ConfigurationRoles.AdminRoles,
         ConfigurationRoles.TagAdminRoles,

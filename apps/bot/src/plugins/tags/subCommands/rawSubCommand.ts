@@ -4,18 +4,18 @@ import { ChatInputCommandInteraction, codeBlock, MessageFlags } from 'discord.js
 import { Context } from '../../../classes/context';
 import { ConfigurationChannels, ConfigurationRoles } from '../../../container';
 import { defineSubCommand } from '../../../define';
-import { Options, TagResponse } from '../../../services/tagService';
+import { Options, tagResponse } from '../../../services/tagService';
 
 export const RawSubCommand = defineSubCommand({
     autocomplete: async (ctx: Context, interaction) => {
         const guildId = interaction.guildId!;
         const query = interaction.options.getString('tag-name') || '';
 
-        const tags = await ctx.services.tags.getMultiValues<string, TagResponse[]>(guildId);
+        const tags = await ctx.services.tags.getMultiValues<string, tagResponse[]>(guildId);
         const filtered = tags
-            .filter((tag) => tag.TagName.toLowerCase().includes(query.toLowerCase()))
+            .filter((tag) => tag.tagName.toLowerCase().includes(query.toLowerCase()))
             .slice(0, 25)
-            .map((tag) => ({ name: tag.TagName, value: tag.TagName }));
+            .map((tag) => ({ name: tag.tagName, value: tag.tagName }));
 
         await interaction.respond(filtered);
     },
@@ -26,7 +26,7 @@ export const RawSubCommand = defineSubCommand({
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         ctx.services.tags.configure<Options>({ guildId, name });
-        const tag = await ctx.services.tags.getValues<Options, TagResponse>();
+        const tag = await ctx.services.tags.getValues<Options, tagResponse>();
 
         if (!tag) {
             await interaction.editReply('Tag not found.');
@@ -34,11 +34,11 @@ export const RawSubCommand = defineSubCommand({
         }
 
         const rawContent = {
-            description: tag.TagEmbedDescription,
-            footer: tag.TagEmbedFooter,
-            imageUrl: tag.TagEmbedImageURL,
-            name: tag.TagName,
-            title: tag.TagEmbedTitle,
+            description: tag.tagEmbedDescription,
+            footer: tag.tagEmbedFooter,
+            imageUrl: tag.tagEmbedImageURL,
+            name: tag.tagName,
+            title: tag.tagEmbedTitle,
         };
 
         await interaction.editReply({
@@ -46,9 +46,9 @@ export const RawSubCommand = defineSubCommand({
         });
     },
     name: 'raw',
-    restrictToConfigChannels: [ConfigurationChannels.AllowedTagChannels],
+    restrictToConfigChannels: [ConfigurationChannels.allowedTagChannels],
     restrictToConfigRoles: [
-        ConfigurationRoles.SupportRoles,
+        ConfigurationRoles.supportRoles,
         ConfigurationRoles.StaffRoles,
         ConfigurationRoles.AdminRoles,
         ConfigurationRoles.TagAdminRoles,

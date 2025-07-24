@@ -15,12 +15,12 @@ export const AddSkullboardChannelSubCommand = defineSubCommand({
         await ctx.services.settings.configure<Options>({ guildId });
         const skullboardSettings = await ctx.services.settings.getSkullboard<Snowflake>(guildId);
 
-        if (skullboardSettings?.SkullboardChannel === channel.id) {
+        if (skullboardSettings?.skullboardChannel === channel.id) {
             await interaction.reply({
                 components: [
                     createConfigurationExistsEmbed({
                         configName: 'Skullboard',
-                        description: `<#${skullboardSettings.SkullboardChannel}>`,
+                        description: `<#${skullboardSettings.skullboardChannel}>`,
                     }),
                 ],
                 flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,

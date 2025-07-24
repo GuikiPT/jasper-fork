@@ -15,7 +15,8 @@
         "migration": "gulp migration",
         "migration:topics": "yarn migration && node dist/migrations/migrate-topics.cjs",
         "migration:skull_default": "yarn migration && node dist/migrations/migrate-skull-default.cjs",
-        "migration:ensure_skull_emoji": "yarn migration && node dist/migrations/ensure-skull-emoji.cjs"
+        "migration:ensure_skull_emoji": "yarn migration && node dist/migrations/ensure-skull-emoji.cjs",
+        "migration:camelcase": "yarn migration && node dist/migrations/migrate-to-camelcase.cjs"
     },
     "main": "dist/src/index.js",
     "author": "JayyDoesDev",

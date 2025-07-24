@@ -134,7 +134,7 @@ export = {
                 flags: MessageFlags.IsComponentsV2,
             });
         },
-        restrictToConfigChannels: [ConfigurationChannels.AllowedSnipeChannels],
+        restrictToConfigChannels: [ConfigurationChannels.allowedSnipeChannels],
         restrictToConfigRoles: [ConfigurationRoles.AdminRoles, ConfigurationRoles.StaffRoles],
     }),
 };

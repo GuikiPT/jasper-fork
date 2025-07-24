@@ -15,12 +15,12 @@ export const SetSkullboardReactionThresholdSubCommand = defineSubCommand({
         await ctx.services.settings.configure<Options>({ guildId });
         const skullboardSettings = await ctx.services.settings.getSkullboard<Snowflake>(guildId);
 
-        if (skullboardSettings?.SkullboardReactionThreshold === threshold) {
+        if (skullboardSettings?.skullboardReactionThreshold === threshold) {
             await interaction.reply({
                 components: [
                     createConfigurationExistsEmbed({
                         configName: 'Skullboard',
-                        description: `${skullboardSettings.SkullboardReactionThreshold}`,
+                        description: `${skullboardSettings.skullboardReactionThreshold}`,
                     }),
                 ],
                 flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,

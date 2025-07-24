@@ -21,9 +21,9 @@ export interface InactiveThread {
 
 export type Settings = {
     Channels: {
-        AllowedSnipeChannels: Snowflake[];
-        AllowedTagChannels: Snowflake[];
-        AutomaticSlowmodeChannels: Snowflake[];
+        allowedSnipeChannels: Snowflake[];
+        allowedTagChannels: Snowflake[];
+        automaticSlowmodeChannels: Snowflake[];
     };
     InactiveThreads: {
         graceTime: number;
@@ -31,18 +31,18 @@ export type Settings = {
         warningTime: number;
     };
     Roles: {
-        AllowedAdminRoles: Snowflake[];
-        AllowedStaffRoles: Snowflake[];
-        AllowedTagAdminRoles: Snowflake[];
-        AllowedTagRoles: Snowflake[];
-        IgnoredSnipedRoles: Snowflake[];
-        SupportRoles: Snowflake[];
+        allowedAdminRoles: Snowflake[];
+        allowedStaffRoles: Snowflake[];
+        allowedTagAdminRoles: Snowflake[];
+        allowedTagRoles: Snowflake[];
+        ignoredSnipedRoles: Snowflake[];
+        supportRoles: Snowflake[];
     };
     Skullboard: {
-        SkullboardBoolean: boolean;
-        SkullboardChannel: Nullable<Snowflake>;
-        SkullboardEmoji: string;
-        SkullboardReactionThreshold: number;
+        skullboardBoolean: boolean;
+        skullboardChannel: Nullable<Snowflake>;
+        skullboardEmoji: string;
+        skullboardReactionThreshold: number;
     };
     Text: {
         Actions: string[];
@@ -50,19 +50,19 @@ export type Settings = {
         Topics: string[];
     };
     Users: {
-        IgnoreSnipedUsers: Snowflake[];
+        ignoreSnipedUsers: Snowflake[];
     };
 };
 
 export type Tag = {
-    TagAuthor: Snowflake;
-    TagEditedBy: Nullable<Snowflake>;
-    TagName: string;
-    TagResponse: {
-        TagEmbedDescription: Nullable<string>;
-        TagEmbedFooter: Nullable<string>;
-        TagEmbedImageURL: Nullable<string>;
-        TagEmbedTitle: string;
+    tagAuthor: Snowflake;
+    tagEditedBy: Nullable<Snowflake>;
+    tagName: string;
+    tagResponse: {
+        tagEmbedDescription: Nullable<string>;
+        tagEmbedFooter: Nullable<string>;
+        tagEmbedImageURL: Nullable<string>;
+        tagEmbedTitle: string;
     };
 };
 
@@ -73,9 +73,9 @@ export default model<GuildDocument>(
             _id: String,
             GuildSettings: {
                 Channels: {
-                    AllowedSnipeChannels: { default: [], type: [] },
-                    AllowedTagChannels: { default: [], type: [] },
-                    AutomaticSlowmodeChannels: { default: [], type: [] },
+                    allowedSnipeChannels: { default: [], type: [] },
+                    allowedTagChannels: { default: [], type: [] },
+                    automaticSlowmodeChannels: { default: [], type: [] },
                 },
                 InactiveThreads: {
                     graceTime: { default: 1440, type: Number },
@@ -83,18 +83,18 @@ export default model<GuildDocument>(
                     warningTime: { default: 2880, type: Number },
                 },
                 Roles: {
-                    AllowedAdminRoles: { default: [], type: [] },
-                    AllowedStaffRoles: { default: [], type: [] },
-                    AllowedTagAdminRoles: { default: [], type: [] },
-                    AllowedTagRoles: { default: [], type: [] },
-                    IgnoredSnipedRoles: { default: [], type: [] },
-                    SupportRoles: { default: [], type: [] },
+                    allowedAdminRoles: { default: [], type: [] },
+                    allowedStaffRoles: { default: [], type: [] },
+                    allowedTagAdminRoles: { default: [], type: [] },
+                    allowedTagRoles: { default: [], type: [] },
+                    ignoredSnipedRoles: { default: [], type: [] },
+                    supportRoles: { default: [], type: [] },
                 },
                 Skullboard: {
-                    SkullboardBoolean: { default: false, type: Boolean },
-                    SkullboardChannel: { default: null, type: String },
-                    SkullboardEmoji: { default: '💀', type: String },
-                    SkullboardReactionThreshold: { default: 4, type: Number },
+                    skullboardBoolean: { default: false, type: Boolean },
+                    skullboardChannel: { default: null, type: String },
+                    skullboardEmoji: { default: '💀', type: String },
+                    skullboardReactionThreshold: { default: 4, type: Number },
                 },
                 Text: {
                     Actions: {
@@ -196,7 +196,7 @@ export default model<GuildDocument>(
                     },
                 },
                 Users: {
-                    IgnoreSnipedUsers: { default: [], type: [] },
+                    ignoreSnipedUsers: { default: [], type: [] },
                 },
             },
             InactiveThreads: {
@@ -216,14 +216,14 @@ export default model<GuildDocument>(
                 default: [],
                 type: [
                     {
-                        TagAuthor: String,
-                        TagEditedBy: { default: null, type: String },
-                        TagName: String,
-                        TagResponse: {
-                            TagEmbedDescription: { default: null, type: String },
-                            TagEmbedFooter: { default: null, type: String },
-                            TagEmbedImageURL: { default: null, type: String },
-                            TagEmbedTitle: { default: undefined, required: true, type: String },
+                        tagAuthor: String,
+                        tagEditedBy: { default: null, type: String },
+                        tagName: String,
+                        tagResponse: {
+                            tagEmbedDescription: { default: null, type: String },
+                            tagEmbedFooter: { default: null, type: String },
+                            tagEmbedImageURL: { default: null, type: String },
+                            tagEmbedTitle: { default: undefined, required: true, type: String },
                         },
                     },
                 ],

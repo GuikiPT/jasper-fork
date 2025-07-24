@@ -4,18 +4,18 @@ import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { Context } from '../../../classes/context';
 import { ConfigurationChannels, ConfigurationRoles } from '../../../container';
 import { defineSubCommand } from '../../../define';
-import { Options, TagResponse } from '../../../services/tagService';
+import { Options, tagResponse } from '../../../services/tagService';
 
 export const DeleteSubCommand = defineSubCommand({
     autocomplete: async (ctx: Context, interaction) => {
         const guildId = interaction.guildId!;
         const query = interaction.options.getString('tag-name') || '';
 
-        const tags = await ctx.services.tags.getMultiValues<string, TagResponse[]>(guildId);
+        const tags = await ctx.services.tags.getMultiValues<string, tagResponse[]>(guildId);
         const filtered = tags
-            .filter((tag) => tag.TagName.toLowerCase().includes(query.toLowerCase()))
+            .filter((tag) => tag.tagName.toLowerCase().includes(query.toLowerCase()))
             .slice(0, 25)
-            .map((tag) => ({ name: tag.TagName, value: tag.TagName }));
+            .map((tag) => ({ name: tag.tagName, value: tag.tagName }));
 
         await interaction.respond(filtered);
     },
@@ -36,7 +36,7 @@ export const DeleteSubCommand = defineSubCommand({
         await interaction.editReply('Tag deleted successfully.');
     },
     name: 'delete',
-    restrictToConfigChannels: [ConfigurationChannels.AllowedTagChannels],
+    restrictToConfigChannels: [ConfigurationChannels.allowedTagChannels],
     restrictToConfigRoles: [
         ConfigurationRoles.StaffRoles,
         ConfigurationRoles.AdminRoles,

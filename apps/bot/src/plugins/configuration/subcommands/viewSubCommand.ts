@@ -76,14 +76,14 @@ export const ViewChannelSubCommand = defineSubCommand({
                         createTable(
                             'Channels',
                             [
-                                createField('Allowed Tag Channels', Channels.AllowedTagChannels, {
+                                createField('Allowed Tag Channels', Channels.allowedTagChannels, {
                                     isChannel: true,
                                     isRole: false,
                                     isUser: false,
                                 }),
                                 createField(
                                     'Allowed Snipe Channels',
-                                    Channels.AllowedSnipeChannels,
+                                    Channels.allowedSnipeChannels,
                                     {
                                         isChannel: true,
                                         isRole: false,
@@ -103,32 +103,32 @@ export const ViewChannelSubCommand = defineSubCommand({
                         createTable(
                             'Roles',
                             [
-                                createField('Support Roles', Roles.SupportRoles, {
+                                createField('Support Roles', Roles.supportRoles, {
                                     isChannel: false,
                                     isRole: true,
                                     isUser: false,
                                 }),
-                                createField('Allowed Tag Roles', Roles.AllowedTagRoles, {
+                                createField('Allowed Tag Roles', Roles.allowedTagRoles, {
                                     isChannel: false,
                                     isRole: true,
                                     isUser: false,
                                 }),
-                                createField('Allowed Tag Admin Roles', Roles.AllowedTagAdminRoles, {
+                                createField('Allowed Tag Admin Roles', Roles.allowedTagAdminRoles, {
                                     isChannel: false,
                                     isRole: true,
                                     isUser: false,
                                 }),
-                                createField('Allowed Admin Roles', Roles.AllowedAdminRoles, {
+                                createField('Allowed Admin Roles', Roles.allowedAdminRoles, {
                                     isChannel: false,
                                     isRole: true,
                                     isUser: false,
                                 }),
-                                createField('Allowed Staff Roles', Roles.AllowedStaffRoles, {
+                                createField('Allowed Staff Roles', Roles.allowedStaffRoles, {
                                     isChannel: false,
                                     isRole: true,
                                     isUser: false,
                                 }),
-                                createField('Ignored Sniped Roles', Roles.IgnoredSnipedRoles, {
+                                createField('Ignored Sniped Roles', Roles.ignoredSnipedRoles, {
                                     isChannel: false,
                                     isRole: true,
                                     isUser: false,
@@ -146,7 +146,7 @@ export const ViewChannelSubCommand = defineSubCommand({
                         createTable(
                             'Users',
                             [
-                                createField('Ignored Sniped Users', Users.IgnoreSnipedUsers, {
+                                createField('Ignored Sniped Users', Users.ignoreSnipedUsers, {
                                     isChannel: false,
                                     isRole: false,
                                     isUser: true,
@@ -164,9 +164,9 @@ export const ViewChannelSubCommand = defineSubCommand({
                         createTable(
                             'Skullboard',
                             [
-                                `- **Skullboard Channel:** ${Skullboard.SkullboardChannel ? `<#${Skullboard.SkullboardChannel}>` : 'None'}\n`,
-                                `- **Emoji:** ${Skullboard.SkullboardEmoji ?? '💀'}\n`,
-                                `- **Reaction Threshold:** ${Skullboard.SkullboardReactionThreshold}\n`,
+                                `- **Skullboard Channel:** ${Skullboard.skullboardChannel ? `<#${Skullboard.skullboardChannel}>` : 'None'}\n`,
+                                `- **Emoji:** ${Skullboard.skullboardEmoji ?? '💀'}\n`,
+                                `- **Reaction Threshold:** ${Skullboard.skullboardReactionThreshold}\n`,
                             ],
                             false,
                         ),
@@ -198,7 +198,7 @@ export const ViewChannelSubCommand = defineSubCommand({
                             [
                                 createField(
                                     'Automatic Slowmode Channels',
-                                    Channels.AutomaticSlowmodeChannels,
+                                    Channels.automaticSlowmodeChannels,
                                     {
                                         isChannel: true,
                                         isRole: false,

@@ -5,18 +5,18 @@ import { Context } from '../../../classes/context';
 import { ConfigurationChannels, ConfigurationRoles } from '../../../container';
 import { defineSubCommand } from '../../../define';
 import { Emojis } from '../../../enums';
-import { Options, TagResponse } from '../../../services/tagService';
+import { Options, tagResponse } from '../../../services/tagService';
 
 export const InfoSubCommand = defineSubCommand({
     autocomplete: async (ctx: Context, interaction) => {
         const guildId = interaction.guildId!;
         const query = interaction.options.getString('tag-name') || '';
 
-        const tags = await ctx.services.tags.getMultiValues<string, TagResponse[]>(guildId);
+        const tags = await ctx.services.tags.getMultiValues<string, tagResponse[]>(guildId);
         const filtered = tags
-            .filter((tag) => tag.TagName.toLowerCase().includes(query.toLowerCase()))
+            .filter((tag) => tag.tagName.toLowerCase().includes(query.toLowerCase()))
             .slice(0, 25)
-            .map((tag) => ({ name: tag.TagName, value: tag.TagName }));
+            .map((tag) => ({ name: tag.tagName, value: tag.tagName }));
 
         await interaction.respond(filtered);
     },
@@ -29,7 +29,7 @@ export const InfoSubCommand = defineSubCommand({
         }
 
         ctx.services.tags.configure<Options>({ guildId, name });
-        const tag = await ctx.services.tags.getValues<Options, TagResponse>();
+        const tag = await ctx.services.tags.getValues<Options, tagResponse>();
 
         if (!tag) {
             await interaction.editReply('Tag not found.');
@@ -45,28 +45,28 @@ export const InfoSubCommand = defineSubCommand({
                 {
                     inline: true,
                     name: 'Author',
-                    value: tag.TagAuthor ? `<@${tag.TagAuthor}>` : 'Unknown',
+                    value: tag.tagAuthor ? `<@${tag.tagAuthor}>` : 'Unknown',
                 },
                 {
                     inline: true,
                     name: 'Edited by',
-                    value: tag.TagEditedBy ? `<@${tag.TagEditedBy}>` : 'Orignal Author',
+                    value: tag.tagEditedBy ? `<@${tag.tagEditedBy}>` : 'Orignal Author',
                 },
-                { inline: true, name: 'Title', value: tag.TagEmbedTitle || 'No title' },
-                { inline: true, name: 'Has Description', value: exists(tag.TagEmbedDescription) },
-                { inline: true, name: 'Has Image', value: exists(tag.TagEmbedImageURL) },
-                { inline: true, name: 'Has Footer', value: exists(tag.TagEmbedFooter) },
+                { inline: true, name: 'Title', value: tag.tagEmbedTitle || 'No title' },
+                { inline: true, name: 'Has Description', value: exists(tag.tagEmbedDescription) },
+                { inline: true, name: 'Has Image', value: exists(tag.tagEmbedImageURL) },
+                { inline: true, name: 'Has Footer', value: exists(tag.tagEmbedFooter) },
             ],
             thumbnail: { url: ctx.user.displayAvatarURL() },
-            title: `Tag Info: ${tag.TagName}`,
+            title: `Tag Info: ${tag.tagName}`,
         };
 
         await interaction.editReply({ embeds: [embed] });
     },
     name: 'info',
-    restrictToConfigChannels: [ConfigurationChannels.AllowedTagChannels],
+    restrictToConfigChannels: [ConfigurationChannels.allowedTagChannels],
     restrictToConfigRoles: [
-        ConfigurationRoles.SupportRoles,
+        ConfigurationRoles.supportRoles,
         ConfigurationRoles.StaffRoles,
         ConfigurationRoles.AdminRoles,
         ConfigurationRoles.TagAdminRoles,

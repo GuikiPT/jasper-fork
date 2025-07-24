@@ -22,9 +22,9 @@ export default class MessageDeleteListener extends Listener<'messageDelete'> {
         await this.ctx.services.settings.configure<Options>({ guildId: message.guild.id });
         const { Channels, Roles, Users } = this.ctx.services.settings.getSettings();
 
-        if (Channels.AllowedSnipeChannels?.includes(message.channel.id)) {
-            if (Users.IgnoreSnipedUsers?.includes(message.author.id)) return;
-            if (checkForRoles(message, ...Roles.IgnoredSnipedRoles)) return;
+        if (Channels.allowedSnipeChannels?.includes(message.channel.id)) {
+            if (Users.ignoreSnipedUsers?.includes(message.author.id)) return;
+            if (checkForRoles(message, ...Roles.ignoredSnipedRoles)) return;
             this.ctx.snipe.set(message.channel.id, message);
         } else {
             return;

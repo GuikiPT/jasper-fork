@@ -78,7 +78,7 @@ export = {
 
                 await ctx.services.settings.configure<Options>({ guildId: interaction.guildId! });
                 const { Channels } = await ctx.services.settings.getSettings();
-                const allowedTagChannels = Channels.AllowedTagChannels;
+                const allowedTagChannels = Channels.allowedTagChannels;
                 if (!allowedTagChannels.includes(interaction.channel.parentId)) {
                     return interaction.reply({
                         content:
@@ -116,7 +116,7 @@ export = {
         },
         permissions: [PermissionsBitField.ManageThreads],
         restrictToConfigRoles: [
-            ConfigurationRoles.SupportRoles,
+            ConfigurationRoles.supportRoles,
             ConfigurationRoles.StaffRoles,
             ConfigurationRoles.AdminRoles,
             ConfigurationRoles.TagAdminRoles,

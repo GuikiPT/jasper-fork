@@ -86,9 +86,9 @@ export const EditSubCommand = defineSubCommand({
         });
     },
     name: 'edit',
-    restrictToConfigChannels: [ConfigurationChannels.AllowedTagChannels],
+    restrictToConfigChannels: [ConfigurationChannels.allowedTagChannels],
     restrictToConfigRoles: [
-        ConfigurationRoles.SupportRoles,
+        ConfigurationRoles.supportRoles,
         ConfigurationRoles.StaffRoles,
         ConfigurationRoles.AdminRoles,
         ConfigurationRoles.TagAdminRoles,

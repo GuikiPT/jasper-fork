@@ -96,7 +96,7 @@ export const ImportSubCommand = defineSubCommand({
         });
     },
     name: 'import',
-    restrictToConfigChannels: [ConfigurationChannels.AllowedTagChannels],
+    restrictToConfigChannels: [ConfigurationChannels.allowedTagChannels],
     restrictToConfigRoles: [
         ConfigurationRoles.StaffRoles,
         ConfigurationRoles.AdminRoles,
