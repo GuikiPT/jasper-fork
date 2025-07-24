@@ -100,7 +100,6 @@ async function migrateToCamelCase() {
                     ],
                 },
 
-                // Rebuild Tags array to camelCase
                 Tags: {
                     $map: {
                         as: 't',
