@@ -24,5 +24,8 @@
 		"onlyBuiltDependencies": [
 			"esbuild"
 		]
+	},
+	"dependencies": {
+		"@skyra/discord-components-core": "^4.0.2"
 	}
 }

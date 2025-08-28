@@ -1,6 +1,8 @@
 <script>
     import parse from "../utils/msgParser.js"
     import "./app.css"
+    import '@skyra/discord-components-core';
+    
     let messages = []
 
     function importPurged(){
@@ -16,21 +18,13 @@
 </script>
 <button class="button" on:click={() => importPurged()}>Import Messages</button>
 
-<ul>
+<discord-messages>
 {#each messages as [messageid, timestamp, username, id, content, repliedUser, repliedContent]}
-    <li class="message">
-        {#if repliedUser} 
-        <div class="reply">
-            <span class="username">---- {repliedUser}</span>
-            <span class="content">{repliedContent}</span>
-        </div>
-        {/if}
-        <div>
-            <span class="username">{username}</span>
-            <span class="id">({id})</span> - 
-            <span class="timestamp">{timestamp}</span>
-        </div>
-        <div class="content">{content}</div>
-    </li>
+	<discord-message author={`${username} (${id})`} timestamp={timestamp}>
+		{#if repliedUser}
+			<discord-reply slot="reply">{repliedUser}: {repliedContent}</discord-reply>
+		{/if}
+		{content}
+	</discord-message>
 {/each}
-</ul>
+</discord-messages>
