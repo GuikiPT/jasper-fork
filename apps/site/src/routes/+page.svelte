@@ -31,37 +31,15 @@
 		input.click();
 	}
 
-	function base64RawFromLocation() {
-		const p = new URLSearchParams(location.search);
-		let raw =
-			p.get('data') ??
-			p.get('b64') ??
-			p.get('base64') ??
-			location.pathname.split('/').filter(Boolean).pop() ??
-			'';
-		return raw || null;
-	}
-
-	function decodeBase64Json(raw) {
-		const comma = raw.indexOf(',');
-		if (raw.startsWith('data:') && comma !== -1) raw = raw.slice(comma + 1);
-		try {
-			raw = decodeURIComponent(raw);
-		} catch {}
-		raw = raw.replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/');
-		const pad = raw.length % 4;
-		if (pad) raw += '='.repeat(4 - pad);
-		const bytes = Uint8Array.from(atob(raw), (c) => c.charCodeAt(0));
-		const text = new TextDecoder().decode(bytes);
-		return JSON.parse(text);
-	}
-
 	onMount(async () => {
 		try {
-			const raw = base64RawFromLocation();
-			if (!raw) return;
-			const decoded = decodeBase64Json(raw);
-			const blob = new Blob([JSON.stringify(decoded)], { type: 'application/json' });
+			const params = new URLSearchParams(location.search);
+			const src = params.get('src');
+			if (!src) return;
+			const res = await fetch(src);
+			if (!res.ok) throw new Error(`Failed to fetch src: ${res.status} ${res.statusText}`);
+			const text = await res.text();
+			const blob = new Blob([text], { type: 'application/json' });
 			const file = new File([blob], 'payload.json', { type: 'application/json' });
 			messages = await parse(file);
 			error = '';
